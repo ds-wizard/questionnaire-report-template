@@ -4,7 +4,6 @@
 {# ------------------------------------------------------------------------------------ #}
 {%- set km = ctx.knowledgeModel -%}
 {%- set repliesMap = ctx.questionnaireReplies -%}
-{%- set report = ctx.report -%}
 {# ------------------------------------------------------------------------------------ #}
 {#  PHASES                                                                              #}
 {# ------------------------------------------------------------------------------------ #}
@@ -19,23 +18,6 @@
 {# ------------------------------------------------------------------------------------ #}
 {#  TAGS, REFERNCES, and EXPERTS MACROS                                                 #}
 {# ------------------------------------------------------------------------------------ #}
-{%- macro renderTags(tagUuids) -%}
-  {%- set tags = [] -%}
-  {% for tagUuid in tagUuids %}
-    {%- if tagUuid in km.entities.tags.keys() %}
-      {%- do tags.append(km.entities.tags[tagUuid]) %}
-    {%- endif %}
-  {% endfor %}
-  {% if tags|length > 0 %}
-    <div class="tags">
-      <?xml version="1.0" encoding="UTF-8" standalone="no"?><svg xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:svg="http://www.w3.org/2000/svg" xmlns="http://www.w3.org/2000/svg" xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" viewBox="0 -256 1950 1950" id="svg4303" version="1.1" inkscape:version="0.48.3.1 r9886" width="100%" height="100%" sodipodi:docname="tags_font_awesome.svg"><defs id="defs4311" /><sodipodi:namedview pagecolor="#ffffff" bordercolor="#666666" borderopacity="1" objecttolerance="10" gridtolerance="10" guidetolerance="10" inkscape:pageopacity="0" inkscape:pageshadow="2" inkscape:window-width="640" inkscape:window-height="480" id="namedview4309" showgrid="false" inkscape:zoom="0.52187927" inkscape:cx="9.5432149" inkscape:cy="1022.7118" inkscape:window-x="0" inkscape:window-y="25" inkscape:window-maximized="0" inkscape:current-layer="svg4303" /><g transform="matrix(1,0,0,-1,21.678786,1392.819)" id="g4305"><path d="m 448,1088 q 0,53 -37.5,90.5 Q 373,1216 320,1216 267,1216 229.5,1178.5 192,1141 192,1088 192,1035 229.5,997.5 267,960 320,960 q 53,0 90.5,37.5 Q 448,1035 448,1088 z M 1515,512 q 0,-53 -37,-90 L 987,-70 q -39,-37 -91,-37 -53,0 -90,37 L 91,646 Q 53,683 26.5,747 0,811 0,864 v 416 q 0,52 38,90 38,38 90,38 h 416 q 53,0 117,-26.5 64,-26.5 102,-64.5 l 715,-714 q 37,-39 37,-91 z m 384,0 q 0,-53 -37,-90 L 1371,-70 q -39,-37 -91,-37 -36,0 -59,14 -23,14 -53,45 l 470,470 q 37,37 37,90 0,52 -37,91 l -715,714 q -38,38 -102,64.5 -64,26.5 -117,26.5 h 224 q 53,0 117,-26.5 64,-26.5 102,-64.5 l 715,-714 q 37,-39 37,-91 z" id="path4307" inkscape:connector-curvature="0" style="fill:currentColor" /></g></svg>
-      <b>Tags:</b>
-      {% for tag in tags %}
-        <i class="tag">{{tag.name}}</i>
-      {% endfor %}
-    </div>
-  {% endif %}
-{%- endmacro -%}
 {%- macro renderResourcePageReferences(referenceUuids) -%}
   {% set resourcePageReferences = [] %}
   {% for uuid in referenceUuids %}
@@ -123,17 +105,21 @@
       <span>{{ hi|of_alphabet }}. {{answer.label}}</span>
     </p>
     {% if answer.advice %}
-      <p class="text-muted"><i>{{answer.advice|markdown}}</i></p>
+      <div class="advice">
+        {{answer.advice|markdown}}
+      </div>
     {% endif %}
-    <div class="followups">
-      {% set hiPrefix = humanIdentifier ~ "." %}
-      {% for questionUuid in answer.followUpUuids %}
-        {% set x = loop.index %}
-        {% if questionUuid in km.entities.questions.keys() %}
-          {{ renderQuestion(km.entities.questions[questionUuid], path, hiPrefix ~ x) }}
-        {% endif %}
-      {% endfor %}
-    </div>
+    {% if answer.followUpUuids|length > 0 %}
+      <div class="followups">
+        {% set hiPrefix = humanIdentifier ~ "." %}
+        {% for questionUuid in answer.followUpUuids %}
+          {% set x = loop.index %}
+          {% if questionUuid in km.entities.questions.keys() %}
+            {{ renderQuestion(km.entities.questions[questionUuid], path, hiPrefix ~ x) }}
+          {% endif %}
+        {% endfor %}
+      </div>
+    {% endif %}
   </div>
 {%- endmacro -%}
 {%- macro renderAnswerList(question, reply, path, humanIdentifier) -%}
@@ -143,7 +129,7 @@
     {% set hiPrefix = humanIdentifier ~ "." %}
     {% for i in reply|reply_items %}
       {% set itemPath = itemPathPrefix ~ i %}
-      {% set itemHumanIdenfifier = hiPrefix ~ loop.index|of_alphabet %}
+      {% set itemHumanIdenfifier = hiPrefix ~ (loop.index - 1)|of_alphabet %}
       <div class="answer-item" id="{{itemPath}}">
         <div class="followups">
           {% for questionUuid in question.itemTemplateQuestionUuids %}
@@ -189,8 +175,6 @@
 {%- endmacro -%}
 {%- macro renderQuestionExtras(question) -%}
   <div class="extra-data">
-    {# Question - Tags #}
-    {{ renderTags(question.tagUuids) }}
     {# Question - References - Resource Page References #}
     {{ renderResourcePageReferences(question.referenceUuids) }}
     {# Question - References - URL References #}
@@ -226,11 +210,30 @@
 {%- macro renderQuestion(question, path, humanIdentifier) -%}
   {% set path = path ~ "." ~ question.uuid %}
   <div class={{questionClasses(question)}} id="{{path}}" data-uuid="{{question.uuid}}" data-type="question">
-    <h4 class="title">
-      <strong class="human-identifier">{{humanIdentifier}}</strong>
-      {{question.title}}
-    </h4>
-    <p class="text text-light">{{question.text|markdown}}</p>
+    <div class="question-header">
+      <h4 class="title">
+        <strong class="human-identifier">{{humanIdentifier}}</strong>
+        {{question.title}}
+      </h4>
+
+      {%- set tags = [] -%}
+      {% for tagUuid in question.tagUuids %}
+        {%- if tagUuid in km.entities.tags.keys() %}
+          {%- do tags.append(km.entities.tags[tagUuid]) %}
+        {%- endif %}
+      {% endfor %}
+      {% if tags|length > 0 %}
+      <div class="tags">
+        {% for tag in tags %}
+          <span class="tag" style="background-color:{{tag.color}}">{{tag.name}}</span>
+        {% endfor %}
+      </div>
+      {% endif %}
+    </div>
+
+    <div class="text">
+      {{question.text|markdown}}
+    </div>
 
     {{ renderQuestionExtras(question) }}
 
@@ -240,56 +243,51 @@
 {# ------------------------------------------------------------------------------------ #}
 {#  CHAPTER MACROS                                                                      #}
 {# ------------------------------------------------------------------------------------ #}
-
-{%- macro renderChapterReport(chapter) -%}
+{%- macro renderReport(report) -%}
   <section class="report">
-    <h3 class="title">Report</h3>
-
-    <h4>Indications</h4>
+    <h3 class="title">Summary</h3>
     <div class="indications">
       <table>
         <tbody>
-          {% for chapterReport in report.chapterReports %}
-            {% if chapterReport.chapterUuid == chapter.uuid %}
-              {% for indication in chapterReport.indications %}
-                <tr>
-                  <td>Answered {% if indication.indicationType == "PhasesAnsweredIndication" %}(current phase){% endif %}</td>
-                  <td>{{indication.answeredQuestions}} / {{indication.answeredQuestions + indication.unansweredQuestions}} </td>
-                </tr>
-              {% endfor %}
-            {% endif %}
+          {% for indication in report.indications %}
+            {% set total = indication.answeredQuestions + indication.unansweredQuestions %}
+            <tr>
+              <td class="table-label">Answered {% if indication.indicationType == "PhasesAnsweredIndication" %}(current phase){% endif %}</td>
+              <td>{{indication.answeredQuestions}} / {{total}} </td>
+              <td class="progress-cell">
+                <div class="progress">
+                  <div class="progress-fill" style="width:{{100 * indication.answeredQuestions / [1, total]|max}}%">
+                  </div>
+                </div>
+              </td>
+            </tr>
           {% endfor %}
         </tbody>
       </table>
     </div>
-
-    <h4>Metrics</h4>
+    {% if report.metrics|length > 0 %}
     <div class="metrics">
-      {% set chapterReports = report.chapterReports|selectattr("chapterUuid", "equalto", chapter.uuid)|selectattr("metrics", "not_empty")|list %}
-      {% if chapterReports|length > 0 %}
         <table>
-          <thead><tr><th>Metric</th><th>Score</th></tr></thead>
+          <thead><tr><th>Metric</th><th colspan="2">Score</th></tr></thead>
           <tbody>
-            {% for chapterReport in chapterReports %}
-              {% if chapterReport.chapterUuid == chapter.uuid %}
-                {% for metric in chapterReport.metrics %}
-                  <tr>
-                    <td>
-                      {{km.entities.metrics[metric.metricUuid].title}}
-                    </td>
-                    <td>{{ metric.measure|round(2) }}</td>
-                  </tr>
-                {% endfor %}
-              {% endif %}
-            {% else %}
-              No indications
+            {% for metric in report.metrics %}
+              <tr>
+                <td class="table-label">
+                  {{km.entities.metrics[metric.metricUuid].title}}
+                </td>
+                <td>{{ "%.2f"|format(metric.measure) }}</td>
+                <td class="progress-cell">
+                  <div class="progress">
+                    <div class="progress-fill bg-value-{{(metric.measure * 10)|int}}0" style="width:{{100 * metric.measure}}%">
+                    </div>
+                  </div>
+                </td>
+              </tr>
             {% endfor %}
           </tbody>
         </table>
-      {% else %}
-        <p class="text-light">No metrics for this chapter.</p>
-      {% endif %}
     </div>
+    {% endif %}
   </section>
 {%- endmacro -%}
 {%- macro renderChapter(chapter, humanIdentifier) -%}
@@ -297,7 +295,10 @@
         <h2 class="title">{{humanIdentifier|roman}}. {{chapter.title}}</h2>
         <p class="text-light">{{chapter.text|markdown}}</p>
 
-        {{ renderChapterReport(chapter) }}
+        {% set chapterReports = ctx.report.chapterReports|selectattr("chapterUuid", "equalto", chapter.uuid)|list %}
+        {% for chapterReport in chapterReports %}
+          {{ renderReport(chapterReport) }}
+        {% endfor %}
 
         <section class="questions">
           <h3 class="title">Questions</h3>
@@ -314,15 +315,10 @@
 {# ------------------------------------------------------------------------------------ #}
 {#  HTML LAYOUT                                                                         #}
 {# ------------------------------------------------------------------------------------ #}
-{%- macro renderHeader() -%}
+{%- macro renderFrontPage() -%}
   <header>
-    <h1>
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 204 153"><path d="M151,113.37,137.24,89.08l-24.67-7.25,19-2.76L113.81,47.7,95.94,37.89l17.18,2.85,37.53,5.7L94.59,1.33c-2.76-2.67-6.88-1.47-8.32,2.44l-14.4,55,20,3.36L69.71,67,57.32,114.31l36.85,5.2-41.56,6.63L.66,152.1s34.15-1.54,45.76-3.16c44-6.14,76.34-6.76,120.36-13.54,7.71-1.19,37.56-20.62,37.56-20.62Z" style="fill:#333"/></svg>
-      <div class="headline">
-        <span class="questionnaire-name">{{ctx.questionnaireName}}</span><br>
-        <span class="km-name">{{km.name}}</span>
-      </div>
-    </h1>
+    <h1>{{ctx.questionnaireName}}</h1>
+
     <table class="dmp-data">
       <tr>
         <th>Organization</th>
@@ -355,15 +351,17 @@
         <td>{{ ctx.createdAt|datetime_format("%d %b %Y") }}</td>
       </tr>
     </table>
+    <p class="tool-info">
+      Report generated by Data Stewardship Wizard &lt;<a href="https://ds-wizard.org" target="_blank">https://ds-wizard.org</a>&gt;
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 405"><path d="M292.5,248.62l-16.8-29.78L245.58,210l23.2-3.4-21.7-38.46-21.81-12,21,3.5,45.83,7-68.46-55.3c-3.38-3.28-8.4-1.8-10.16,3l-17.6,67.44,24.47,4.12-27.1,6-15.14,58,45,6.38-50.76,8.13-63.46,31.83s41.71-1.89,55.9-3.87c53.74-7.53,93.22-8.29,147-16.61,9.41-1.46,45.88-25.28,45.88-25.28Z" style="fill:#f15a24"/><path d="M498.18,201.59q0,32.44-18.39,49.69t-53.13,17.25H389.61V137.16h41.08q32,0,49.77,17T498.18,201.59Zm-28.82.72q0-42.31-37.24-42.32H417.35v85.54h11.91Q469.36,245.53,469.36,202.31Z" style="fill:#4d4948"/><path d="M598.16,232.05q0,17.79-12.75,28t-35.49,10.24q-21,0-37.06-7.91V236.55a152.69,152.69,0,0,0,22.42,8.35,66,66,0,0,0,16.78,2.43q9.13,0,14-3.51T571,233.4a11.54,11.54,0,0,0-2.15-6.87,24,24,0,0,0-6.31-5.8q-4.15-2.79-17-8.9-12-5.66-18-10.87A40.67,40.67,0,0,1,518,188.83a34.67,34.67,0,0,1-3.58-16.17q0-17.43,11.77-27.41t32.54-10a76.94,76.94,0,0,1,19.47,2.42,134.47,134.47,0,0,1,19.37,6.83l-8.95,21.66a129.87,129.87,0,0,0-17.32-6,55.4,55.4,0,0,0-13.47-1.71q-7.87,0-12.08,3.69a12.15,12.15,0,0,0-4.21,9.61,11.92,11.92,0,0,0,1.7,6.42,18.81,18.81,0,0,0,5.42,5.31q3.71,2.55,17.59,9.21,18.35,8.81,25.15,17.65T598.16,232.05Z" style="fill:#4d4948"/><path d="M758.13,268.53h-31.6l-17.72-69q-1-3.68-3.36-15.23t-2.73-15.5q-.54,4.86-2.68,15.59t-3.32,15.32l-17.63,68.83H647.58L614.2,137.16h27.3l16.74,71.71q4.38,19.86,6.35,34.41.54-5.11,2.46-15.85t3.63-16.67l19.06-73.6H716L735,210.76q1.26,4.94,3.14,15.09T741,243.28q.9-7,2.87-17.47t3.58-16.94l16.64-71.71h27.3Z" style="fill:#4d4948"/></svg>
+    </p>
   </header>
-{%- endmacro -%}
-{%- macro renderFooter() -%}
-  <footer>
-    Data Management Plan generated by Data Stewardship Wizard &lt;<a href="https://ds-wizard.org" target="_blank">https://ds-wizard.org</a>&gt;
-  </footer>
 {%- endmacro -%}
 {%- macro renderContent() -%}
   <main>
+    <section class="total-report">
+      {{ renderReport(ctx.report.totalReport) }}
+    </section>
     {% for chapterUuid in km.chapterUuids %}
       {{ renderChapter(km.entities.chapters[chapterUuid], loop.index) }}
     {% else %}
@@ -382,9 +380,8 @@
   </head>
   <body>
     <article class="dmp">
-      {{ renderHeader() }}
+      {{ renderFrontPage() }}
       {{ renderContent() }}
-      {{ renderFooter() }}
     </article>
   </body>
 </html>

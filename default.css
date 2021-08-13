@@ -1,25 +1,36 @@
-/**************************/
-/* GENERAL STYLE          */
-/**************************/
+/* General styles */
+
+@page {
+  margin: 2.5cm;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  page-break-inside: avoid !important;
+  page-break-after: avoid !important;
+}
+
+html, body {
+  height: 100%;
+}
 
 body {
   max-width: 1000px;
   margin: auto;
   font-family: sans-serif;
-  font-size: .95rem;
+  font-size: 10pt;
+  line-height: 1.5;
+}
+
+h1 {
+  font-size: 22pt;
 }
 
 h1, h2, h3, h4, h5, h6 {
   color: #333;
 }
 
-h3, h4 {
-  margin-top: 1.33em;
-  margin-bottom: 0.5em;
-}
-
 a {
-  color: #868e96;
+  color: #049;
 }
 
 .text-light {
@@ -30,141 +41,176 @@ a {
   color: #AEA79F!important;
 }
 
-/**************************/
+table {
+  width: 100%;
+}
+
+
+/* Front page */
 
 header {
-  padding-bottom: 1rem;
-  border-bottom: solid 3px #aaaaaa;
+  height: 25cm;
+  position: relative;
 }
 
-header > h1 {
-  font-size: 200%;
-  margin: 0.5rem 0 ;
-  line-height: 3rem;
-  vertical-align: middle;
+header h1 {
+  padding: 7rem 0 4rem 0;
 }
 
-header > h1 > div.headline {
-  float: left;
-  margin-left: 1rem;
+header .dmp-data {
+  margin-top: 5rem;
+  width: 100%;
 }
 
-header > h1 > div.headline > span.km-name {
-  color: #868e96;
-  font-size: 75%;
-  font-style: italic;
-}
-
-header > h1 > svg {
-  float: left;
-  height: 40px;
-  width: 50px;
-  vertical-align: middle;
-  margin: 0.5rem;
-}
-
-header h1::after,
-header::after {
-  content: "";
-  display: block;
-  clear: both;
-}
-
-/**************************/
-
-dl {
-  color: #868e96;
-}
-
-dl dt {
-  display: inline-block;
-  width: 15%;
-  padding: 0.2rem 0;
-  float: left;
-}
-
-dl dt::after {
-  content: ":";
-}
-
-dl dd {
-  display: inline-block;
-  width: 85%;
-  margin: 0;
-  padding: 0.2rem 0;
-  float: left;
-  font-style: italic;
-}
-
-dl dt > span.package-id {
-  font-family: monospace;
-  font-style: normal;
-}
-
-/**************************/
-
-table {
-  border-spacing: 0;
-}
-
-table th {
-  padding: 0.5rem;
-  border-right: 1px solid #E1E1E1;
-  border-bottom: 1px solid #E1E1E1;
-}
-
-table th:first-child {
-  border-left: 1px solid #E1E1E1;
-}
-
-table tr:first-child td,
-table tr:first-child th {
-  border-top: 1px solid #E1E1E1;
-}
-
-table td {
-  padding: 0.5rem;
-  border-right: 1px solid #E1E1E1;
-  border-bottom: 1px solid #E1E1E1;
-  text-align: center;
-}
-
-table td:first-child {
-  border-left: 1px solid #E1E1E1;
+header .dmp-data td, header .dmp-data th {
   text-align: left;
+  padding: 0.5rem 0;
 }
 
-/**************************/
-
-footer {
-  padding: 0.5em 0.5em 0.5em 0.5em;
+header .tool-info {
   text-align: center;
-  font-size: 90%;
+  margin: 0;
+  padding-top: 2rem;
+  color: #868e96;
+  position: absolute;
+  bottom: 0;
+  width: 100%;
 }
 
-/**************************/
-/* KM-SPECIFIC STYLE      */
-/**************************/
+header .tool-info svg {
+  height: 3rem;
+  display: block;
+  margin: auto;
+}
+
+
+/* Total report section */
+
+.total-report {
+  page-break-after: always;
+}
+
+
+/* Metrics and indications report */
 
 .report {
-  margin-bottom: 1rem;
+  margin-top: 1rem;
+  margin-bottom: 3rem;
+  background: #eee;
+  border-radius: .5rem;
+  padding: 1rem;
 }
 
-/**************************/
+.report h3 {
+  margin-top: 0;
+}
+
+.report table {
+  border-spacing: 0 .5rem;
+}
+
+.report .metrics {
+  margin-top: 1rem;
+}
+
+.report .metrics table th {
+  text-align: left;
+  padding: 0;
+}
+
+.report .table-label {
+  width: 40%;
+}
+
+.report .progress-cell {
+  width: 50%;
+}
+
+.report .progress {
+  position: relative;
+  height: .75rem;
+  background: #ddd;
+  border-radius: .25rem;
+}
+
+.report .progress-fill {
+  position: absolute;
+  left: 0;
+  height: 100%;
+  background: #17a2b8;
+  border-radius: .25rem;
+}
+
+.report .progress-fill.bg-value-100 {
+  background:#28a745;
+}
+
+.report .progress-fill.bg-value-90 {
+  background:#53ac39;
+}
+
+.report .progress-fill.bg-value-80 {
+  background:#7eb12c;
+}
+
+.report .progress-fill.bg-value-70 {
+  background:#a9b720;
+}
+
+.report .progress-fill.bg-value-60 {
+  background:#d4bc13;
+}
+
+.report .progress-fill.bg-value-50 {
+  background:#ffc107;
+}
+
+.report .progress-fill.bg-value-40 {
+  background:#f8a513;
+}
+  
+.report .progress-fill.bg-value-30 {
+  background:#f18920;
+}
+
+.report .progress-fill.bg-value-20 {
+  background:#ea6d2c;
+}
+
+.report .progress-fill.bg-value-10 {
+  background:#e35139;
+}
+
+.report .progress-fill.bg-value-0 {
+  background:#dc3545;
+}
+
+
+/* Chapter */
 
 .chapter {
-  border-bottom: solid 2px #cccccc;
+  page-break-before: always;
+  margin-bottom: 5rem;
 }
 
-/**************************/
+
+/* Question */
+
+.question:not(:last-child) {
+  padding-bottom: 3rem;
+}
+
+.answer-item:not(:last-child) {
+  margin-bottom: 3rem;
+}
 
 .question, .answer-item {
-  padding: 5px 10px 25px 10px;
-  border-left: 5px solid #ddd;
+  border-left: 5px solid #eee;
+  padding-left: 1rem
 }
 
-.question:last-child, .answer-item:last-child {
-  padding-bottom: 5px;
+.followups {
+  margin-top: 2rem;
 }
 
 .answer-item > .followups > .question, .questions > .question {
@@ -172,51 +218,79 @@ footer {
   padding-left: 0;
 }
 
-.question > h4 {
+.question-header h4 {
   margin-top: 0;
   margin-bottom: 0.5rem;
-  font-size: 0.95rem;
   font-weight: bold;
+  background: #eee;
+  padding: 1rem;
+  border-radius: 0.5rem;
 }
 
 .question .title .human-identifier {
-  display: inline-block;
-  padding: 0.1rem 0.5rem;
+  display: block;
   margin-bottom: 0.25rem;
-  margin-right: 0.25rem;
-  border: 1px solid #999;
+  font-size: 8pt;
+}
+
+.question .question-header {
+  page-break-inside: avoid;
+}
+
+.question .tag {
+  padding: .125rem 0.5rem;
+  color: #fff;
+  font-size: 8pt;
+  font-weight: bold;
   border-radius: 0.25rem;
-  color: #999;
-  font-size: 0.75rem;
-  vertical-align: middle;
+  margin-right: 0.25rem;
 }
 
 .question .text {
   margin-top: 0;
   margin-bottom: 0.75rem;
+  color: #6c757d;
 }
 
 .question > .extra-data {
   margin-bottom: 0.75rem;
+  color: #6c757d;
 }
 
 .question b {
   font-weight: normal;
 }
 
-/**************************/
+.advice {
+  background: #d1ecf1;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  color: #0c5460;
+  margin: 1rem 0;
+}
 
-.tags, .experts, .references {
+.advice > *:first-child {
+  margin-top: 0;
+}
+
+.advice > *:last-child {
+  margin-bottom: 0;
+}
+
+
+/* Experts and references */
+
+.experts, .references {
   color: #868e96;
   line-height: 1.5;
 }
 
-.tags b, .experts b, .reference b,
-.tags i, .experts a, .reference a {
+.experts b, .reference b,
+.experts a, .reference a {
   vertical-align: middle;
 }
 
-.tags svg, .experts svg, .references svg {
+.experts svg, .references svg {
   width: 13px;
   height: 14px;
   margin-right: 7px;
@@ -224,23 +298,22 @@ footer {
   color: #495057;
 }
 
-.tag::after, .expert::after, .reference::after {
+.expert::after, .reference::after {
   content: ",";
 }
 
-.tag:last-of-type::after, .expert:last-of-type::after, .reference:last-of-type::after {
+.expert:last-of-type::after, .reference:last-of-type::after {
   content: " ";
 }
 
-/**************************/
+
+/* Answers */
 
 .choices-list {
   list-style-type: none;
 }
 
 .choices-list .choice {
-  font-style: italic;
-  padding: 0.3em;
   display: flex;
   align-items: center;
 }
@@ -249,8 +322,8 @@ footer {
   color: gray;
 }
 
-.answer-block .answer {
-  font-style: italic;
+.answer p, .no-answer p {
+  margin: 0;
 }
 
 .answer-block .answer span {
@@ -266,13 +339,8 @@ footer {
   vertical-align: middle;
 }
 
-.answer-item > .answer:first-child {
-  margin-top: 0;
-  margin-bottom: 25px;
-}
-
 .no-answer {
-  font-weight: bold;
+  font-style: italic;
 }
 
 .no-answer span {
@@ -281,10 +349,6 @@ footer {
 
 .question.required .no-answer {
   color: #D0021B;
-}
-
-.question.optional .no-answer {
-  color: #9B9B9B;
 }
 
 .integration-link {

@@ -1,7 +1,7 @@
 {
   "organizationId": "dsw",
   "templateId": "questionnaire-report",
-  "version": "1.4.0",
+  "version": "2.0.0",
   "name": "Questionnaire Report",
   "description": "Exported questions and answers from a questionnaire",
   "recommendedPackageId": null,
@@ -63,7 +63,9 @@
             }, 
             {
                 "name" : "wkhtmltopdf",
-                "options" : {}
+                "options" : {
+                    "args": "--disable-smart-shrinking -B 20mm -L 20mm -R 20mm -T 25mm"
+                }
             }
         ]
     }, 

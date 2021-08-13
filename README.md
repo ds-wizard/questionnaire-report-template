@@ -4,6 +4,10 @@ This generic *default* template for [Data Stewardship Wizard](https://ds-wizard.
 
 ## Changelog
 
+### 2.0.0
+
+- Improve template visual
+
 ### 1.4.0
 
 - Adjusted to template metamodel version 4 (released in DSW 3.2.0)
