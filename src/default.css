@@ -1,5 +1,4 @@
 /* General styles */
-
 @page {
   margin: 2.5cm;
 }
@@ -250,6 +249,7 @@ header .tool-info svg {
   margin-top: 0;
   margin-bottom: 0.75rem;
   color: #6c757d;
+  page-break-inside: avoid !important;
 }
 
 .question > .extra-data {

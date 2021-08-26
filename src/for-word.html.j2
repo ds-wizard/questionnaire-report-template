@@ -1,0 +1,321 @@
+<!DOCTYPE HTML>
+{# ------------------------------------------------------------------------------------ #}
+{#  VARIABLES                                                                           #}
+{# ------------------------------------------------------------------------------------ #}
+{%- set km = ctx.knowledgeModel -%}
+{%- set repliesMap = ctx.questionnaireReplies -%}
+{# ------------------------------------------------------------------------------------ #}
+{#  PHASES                                                                              #}
+{# ------------------------------------------------------------------------------------ #}
+{%- set phasesMap = dict() -%}
+{%- for phaseUuid in km.phaseUuids -%}
+  {%- do phasesMap.update({phaseUuid: loop.index}) -%}
+{%- endfor -%}
+{%- set currentPhaseIndex = -1 %}
+{%- if ctx.phaseUuid -%}
+  {%- set currentPhaseIndex = phasesMap[ctx.phaseUuid] %}
+{%- endif -%}
+{# ------------------------------------------------------------------------------------ #}
+{#  TAGS, REFERNCES, and EXPERTS MACROS                                                 #}
+{# ------------------------------------------------------------------------------------ #}
+{%- macro renderTags(tagUuids) -%}
+  {%- set tags = [] -%}
+  {% for tagUuid in tagUuids %}
+    {%- if tagUuid in km.entities.tags.keys() %}
+      {%- do tags.append(km.entities.tags[tagUuid]) %}
+    {%- endif %}
+  {% endfor %}
+  {% if tags|length > 0 %}
+    <div>
+      🏷️ <b>Tags:</b> {% for tag in tags %}<i>{{tag.name}}</i>{% if not loop.last %}, {% endif %}{% endfor %}
+    </div>
+  {% endif %}
+{%- endmacro -%}
+{%- macro renderResourcePageReferences(referenceUuids) -%}
+  {% set resourcePageReferences = [] %}
+  {% for uuid in referenceUuids %}
+    {% if km.entities.references[uuid].referenceType == "ResourcePageReference" %}
+      {% do resourcePageReferences.append(km.entities.references[uuid]) %}
+    {% endif %}
+  {% endfor %}
+  {% if resourcePageReferences|length > 0 %}
+    <div>
+      📖 <b>Data Stewardship for Open Science:</b> {% for reference in resourcePageReferences if reference.referenceType == "ResourcePageReference" %}<a href="{{ (ctx.config.clientUrl ~ "/book-references/" ~ reference.shortUuid) }}" target="_blank"><i>{{reference.shortUuid}}</i></a>{% if not loop.last %}, {% endif %}{% endfor %}
+    </div>
+  {% endif %}
+{%- endmacro -%}
+{%- macro renderURLReferences(referenceUuids) -%}
+  {% set urlReferences = [] %}
+  {% for uuid in referenceUuids %}
+    {% if km.entities.references[uuid].referenceType == "URLReference" %}
+      {% do urlReferences.append(km.entities.references[uuid]) %}
+    {% endif %}
+  {% endfor %}
+  {% if urlReferences|length > 0 %}
+    <div>
+      🔗 <b>External Links:</b> {% for reference in urlReferences if reference.referenceType == "URLReference" %}<a href="{{reference.url}}" target="_blank"><i>{{reference.label}}</i></a>{% if not loop.last %}, {% endif %}{% endfor %}
+    </div>
+  {% endif %}
+{%- endmacro -%}
+{%- macro renderExperts(expertUuids) -%}
+  {% if expertUuids|length > 0 %}
+    <div>
+      🙋 <b>Experts:</b> {% for expertUuid in expertUuids %}{% set expert = km.entities.experts[expertUuid] %}<i>{{expert.name}} (<a href="mailto:{{expert.email}}">{{expert.email}}</a>){% if not loop.last %}, {% endif %}</i>
+      {% endfor %}
+    </div>
+  {% endif %}
+{%- endmacro -%}
+{# ------------------------------------------------------------------------------------ #}
+{#  ANSWERS MACROS                                                                      #}
+{# ------------------------------------------------------------------------------------ #}
+{%- macro renderAnswerValue(question, reply, path, humanIdentifier) -%}
+  <div>
+    <p>
+      ✔️
+      {% if reply.value.type == "StringReply" %}
+        <span>{{reply.value.value}}</span>
+      {% else %}
+        <span>{{reply.value.value.value}}</span>
+        {% if reply.value.value.type == "IntegrationType" and reply.value.value.id %}
+          {# Integration #}
+          {% set integration = km.entities.integrations[question.integrationUuid] %}
+          <span>
+            ({{ integration.name }}: <a href="{{ integration.itemUrl|replace('${id}', reply.value.value.id) }}">{{ reply.value.value.id }}</a>)
+          </span>
+        {% endif %}
+      {% endif %}
+    </p>
+  </div>
+{%- endmacro -%}
+{%- macro renderAnswerOption(question, reply, path, humanIdentifier) -%}
+  {% set replyValue = reply|reply_str_value %}
+  {% set hi = question.answerUuids.index(replyValue) %}
+  {% set answer = km.entities.answers[replyValue] %}
+  {% set path = path ~ "." ~ answer.uuid %}
+  {% set humanIdentifier = humanIdentifier ~ "." ~ hi|of_alphabet %}
+  <div>
+    <p>
+      ✔️ <span>{{ hi|of_alphabet }}. {{answer.label}}</span>
+    </p>
+    {% if answer.advice %}
+    <p>
+      <b>Advice:</b> {{answer.advice|markdown}}
+    </p>
+    {% endif %}
+    {% if answer.followUpUuids|length > 0 %}
+      <div>
+        {% set hiPrefix = humanIdentifier ~ "." %}
+        {% for questionUuid in answer.followUpUuids %}
+          {% set x = loop.index %}
+          {% if questionUuid in km.entities.questions.keys() %}
+            {{ renderQuestion(km.entities.questions[questionUuid], path, hiPrefix ~ x) }}
+          {% endif %}
+        {% endfor %}
+      </div>
+    {% endif %}
+  </div>
+{%- endmacro -%}
+{%- macro renderAnswerList(question, reply, path, humanIdentifier) -%}
+  <div>
+    <h4>Answers ({{reply|reply_items|length}} items)</h4>
+    {% set itemPathPrefix = path ~ "." %}
+    {% set hiPrefix = humanIdentifier ~ "." %}
+    {% for i in reply|reply_items %}
+      {% set itemPath = itemPathPrefix ~ i %}
+      {% set itemHumanIdenfifier = hiPrefix ~ (loop.index - 1)|of_alphabet %}
+      <div class="answer-item" id="{{itemPath}}">
+        <div class="followups">
+          {% for questionUuid in question.itemTemplateQuestionUuids %}
+            {% set x = loop.index %}
+            {% if questionUuid in km.entities.questions.keys() %}
+              {{ renderQuestion(km.entities.questions[questionUuid], itemPath, itemHumanIdenfifier ~ "." ~ x) }}
+            {% endif %}
+          {% else %}
+            <i>No follow up questions</i>
+          {% endfor %}
+        </div>
+      </div>
+    {% else %}
+      <i>No answer items</i>
+    {% endfor %}
+  </div>
+{%- endmacro -%}
+{%- macro renderChoiceList(question, reply, path, humanIdentifier) -%}
+  <div>
+    <ul>
+    {% for choiceUuid in question.choiceUuids %}
+      {%- set choice = km.entities.choices[choiceUuid] -%}
+      {%- if choiceUuid in reply|reply_items %}
+        <li>✔️ {{ choice.label }}</li>
+      {%- else %}
+        <li>❌ {{ choice.label }}</li>
+      {%- endif %}
+    {% endfor %}
+    </ul>
+  </div>
+{%- endmacro -%}
+{# ------------------------------------------------------------------------------------ #}
+{#  QUESTION MACROS                                                                     #}
+{# ------------------------------------------------------------------------------------ #}
+{%- macro renderQuestionExtras(question) -%}
+  <div>
+    {{ renderResourcePageReferences(question.referenceUuids) }}
+    {{ renderURLReferences(question.referenceUuids) }}
+    {{ renderExperts(question.expertUuids) }}
+  </div>
+{%- endmacro -%}
+{%- macro renderQuestionReply(question, path, humanIdentifier) -%}
+  {# Question - Answers #}
+  {% set reply = repliesMap[path] %}
+  {% if reply and reply.value %}
+    {% if question.questionType == "ValueQuestion" and reply.value.type == "StringReply" %}
+      {{ renderAnswerValue(question, reply, path, humanIdentifier) }}
+    {% elif question.questionType == "OptionsQuestion" and reply.value.type == "AnswerReply" %}
+      {{ renderAnswerOption(question, reply, path, humanIdentifier) }}
+    {% elif question.questionType == "ListQuestion" and reply.value.type == "ItemListReply" %}
+      {{ renderAnswerList(question, reply, path, humanIdentifier) }}
+    {% elif question.questionType == "IntegrationQuestion" and reply.value.type == "IntegrationReply" %}
+      {{ renderAnswerValue(question, reply, path, humanIdentifier) }}
+    {% elif question.questionType == "MultiChoiceQuestion" and reply.value.type == "MultiChoiceReply" %}
+      {{ renderChoiceList(question, reply, path, humanIdentifier) }}
+    {% endif %}
+  {% else %}
+    <p>❗ <i>This question has not been answered yet!</i></p>
+  {% endif %}
+{%- endmacro -%}
+{%- macro renderQuestion(question, path, humanIdentifier) -%}
+  {% set path = path ~ "." ~ question.uuid %}
+  <div>
+    <h2>{{humanIdentifier}}. {{question.title}}</h2>
+
+    {{ renderTags(question.tagUuids) }}
+
+    {{ renderQuestionExtras(question) }}
+
+    {{ question.text|markdown }}
+
+    {{ renderQuestionReply(question, path, humanIdentifier) }}
+  </div>
+{%- endmacro -%}
+{# ------------------------------------------------------------------------------------ #}
+{#  CHAPTER MACROS                                                                      #}
+{# ------------------------------------------------------------------------------------ #}
+{%- macro renderReport(report) -%}
+  <section>
+    <h2>Summary</h2>
+    <h3>Answered indication</h3>
+    <table>
+      <tbody>
+        {% for indication in report.indications %}
+          {%- set total = indication.answeredQuestions + indication.unansweredQuestions -%}
+          {%- set percentage = 0 if total == 0 else 100 * indication.answeredQuestions / total %}
+          <tr>
+            <td>Answered {% if indication.indicationType == "PhasesAnsweredIndication" %}(current phase){% endif %}</td>
+            <td>{{ indication.answeredQuestions }} / {{ total }} </td>
+            <td>{{ "%.2f"|format(percentage)}} %</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% if report.metrics|length > 0 %}
+    <h3>Metrics</h3>
+    <table>
+      <thead><tr><th>Metric</th><th>Score</th></tr></thead>
+      <tbody>
+        {% for metric in report.metrics %}
+          <tr>
+            <td>{{ km.entities.metrics[metric.metricUuid].title }}</td>
+            <td>{{ "%.2f"|format(metric.measure) }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% endif %}
+  </section>
+{%- endmacro -%}
+{%- macro renderChapter(chapter, humanIdentifier) -%}
+      <section>
+        <h1>{{humanIdentifier|roman}}. {{chapter.title}}</h1>
+        <p>{{chapter.text|markdown}}</p>
+
+        {% set chapterReports = ctx.report.chapterReports|selectattr("chapterUuid", "equalto", chapter.uuid)|list %}
+        {% for chapterReport in chapterReports %}
+          {{ renderReport(chapterReport) }}
+        {% endfor %}
+
+        <section>
+          {% for questionUuid in chapter.questionUuids %}
+            {% if questionUuid in km.entities.questions.keys() %}
+              {{ renderQuestion(km.entities.questions[questionUuid], chapter.uuid, loop.index) }}
+            {% endif %}
+          {% else %}
+            <p><i>No questions</i></p>
+          {% endfor %}
+        </section>
+      </section>
+{%- endmacro -%}
+{# ------------------------------------------------------------------------------------ #}
+{#  HTML LAYOUT                                                                         #}
+{# ------------------------------------------------------------------------------------ #}
+{%- macro renderFrontPage() -%}
+  <table>
+    <tr>
+      <th>Organization</th>
+      <td>{{ctx.organization.name}}</td>
+    </tr>
+    {% if ctx.createdBy %}
+    <tr>
+      <th>Created by</th>
+      <td>{{ctx.createdBy.firstName}} {{ctx.createdBy.lastName}} (<a href="mailto:{{ctx.createdBy.email}}">{{ctx.createdBy.email}}</a>)</td>
+    </tr>
+    {% endif %}
+    <tr>
+      <th>Based on</th>
+      <td>{{ctx.package.name}}, {{ctx.package.version}} (<code>{{ctx.package.organizationId}}:{{ctx.package.kmId}}:{{ctx.package.version}}</code>)</td>
+    </tr>
+    {% for version in ctx.questionnaireVersions if version.uuid == ctx.questionnaireVersion %}
+    <tr>
+      <th>Version</th>
+      <td>{{version.name}} ({{ version.createdAt|datetime_format("%d %b %Y %H:%M:%S") }} UTC)</td>
+    </tr>
+    {% endfor %}
+    {% if ctx.phaseUuid %}
+    <tr>
+      <th>Project phase</th>
+      <td>{{km.entities.phases[ctx.phaseUuid].title}}</td>
+    </tr>
+    {% endif %}
+    <tr>
+      <th>Created at</th>
+      <td>{{ ctx.createdAt|datetime_format("%d %b %Y") }}</td>
+    </tr>
+  </table>
+
+  \newpage
+{%- endmacro -%}
+{%- macro renderContent() -%}
+  <div>
+    <div>
+      {{ renderReport(ctx.report.totalReport) }}
+    </div>
+    {% for chapterUuid in km.chapterUuids %}
+      \newpage
+      {{ renderChapter(km.entities.chapters[chapterUuid], loop.index) }}
+    {% else %}
+      <p><i>No chapters</i></p>
+    {% endfor %}
+  </div>
+{%- endmacro -%}
+{# ------------------------------------------------------------------------------------ #}
+{#  HTML TEMPLATE                                                                       #}
+{# ------------------------------------------------------------------------------------ #}
+<html>
+  <head>
+    <title>{{ctx.questionnaireName}}</title>
+    <meta charset="utf-8">
+  </head>
+  <body>
+      {{ renderFrontPage() }}
+      {{ renderContent() }}
+  </body>
+</html>

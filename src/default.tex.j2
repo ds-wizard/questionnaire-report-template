@@ -1,0 +1,351 @@
+{#- ------------------------------------------------------------------------------------ -#}
+{#-  VARIABLES                                                                           -#}
+{#- ------------------------------------------------------------------------------------ -#}
+{%- set km = ctx.knowledgeModel -%}
+{%- set repliesMap = ctx.questionnaireReplies -%}
+{#- ------------------------------------------------------------------------------------ -#}
+{#-  PHASES                                                                              -#}
+{#- ------------------------------------------------------------------------------------ -#}
+{%- set phasesMap = dict() -%}
+{%- for phaseUuid in km.phaseUuids -%}
+  {%- do phasesMap.update({phaseUuid: loop.index}) -%}
+{%- endfor -%}
+{%- set currentPhaseIndex = -1 %}
+{%- if ctx.phaseUuid -%}
+  {%- set currentPhaseIndex = phasesMap[ctx.phaseUuid] %}
+{%- endif -%}
+{#- ------------------------------------------------------------------------------------ -#}
+{#-  ANSWERS MACROS                                                                      -#}
+{#- ------------------------------------------------------------------------------------ -#}
+{%- macro renderAnswerValue(question, reply, path, humanIdentifier) %}
+{%- if reply.value.type == "StringReply" %}
+\begin{itemize}
+  \item[\CheckmarkBold] {{reply.value.value}}
+\end{itemize}
+{% else %}
+\begin{itemize}
+  \item[\CheckmarkBold] {{reply.value.value.value}} {% if reply.value.value.type == "IntegrationType" and reply.value.value.id -%}
+  {%- set integration = km.entities.integrations[question.integrationUuid] -%}
+  \href{{ "{" }}{{ integration.itemUrl|replace('${id}', reply.value.value.id) }}{{ "}" }}{{ "{" }}({{ integration.name }}: {{ reply.value.value.id }}){{ "}" }}
+  {% endif %}
+\end{itemize}
+{% endif -%}
+{%- endmacro -%}
+{%- macro renderAnswerOption(question, reply, path, humanIdentifier) -%}
+{%- set replyValue = reply|reply_str_value -%}
+{%- set hi = question.answerUuids.index(replyValue) -%}
+{%- set answer = km.entities.answers[replyValue] -%}
+{%- set path = path ~ "." ~ answer.uuid -%}
+{%- set humanIdentifier = humanIdentifier ~ "." ~ hi|of_alphabet %}
+\begin{itemize}
+  \item[\CheckmarkBold] {{ hi|of_alphabet }}. {{ answer.label }}
+\end{itemize}
+
+{% if answer.advice -%}
+\noindent
+\begin{markdown}
+{{answer.advice}}
+\end{markdown}
+{%- endif %}
+
+{% if answer.followUpUuids|length > 0 -%}
+{%- set hiPrefix = humanIdentifier ~ "." -%}
+{%- for questionUuid in answer.followUpUuids -%}
+{%- set x = loop.index -%}
+{%- if questionUuid in km.entities.questions.keys() %}
+{{ renderQuestion(km.entities.questions[questionUuid], path, hiPrefix ~ x, False) }}
+{%- endif -%}
+{%- endfor -%}
+{%- endif -%}
+{%- endmacro -%}
+{%- macro renderAnswerList(question, reply, path, humanIdentifier) -%}
+{%- set itemPathPrefix = path ~ "." -%}
+{%- set hiPrefix = humanIdentifier ~ "." -%}
+\begin{itemize}
+  \item[\ArrowBoldDownRight] Answered with {{reply|reply_items|length}} item{% if reply|reply_items|length > 1 %}s{% endif %} as follows.
+\end{itemize}
+{%- for i in reply|reply_items -%}
+{%- set itemPath = itemPathPrefix ~ i -%}
+{%- set itemHumanIdenfifier = hiPrefix ~ (loop.index - 1)|of_alphabet -%}
+% Answer item: {{itemPath}}
+
+{%- for questionUuid in question.itemTemplateQuestionUuids -%}
+  {%- set x = loop.index -%}
+  {%- if questionUuid in km.entities.questions.keys() %}
+{{ renderQuestion(km.entities.questions[questionUuid], itemPath, itemHumanIdenfifier ~ "." ~ x) }}
+  {%- endif %}
+{% else -%}
+  \textit{No follow up questions}
+{% endfor %}
+{% endfor %}
+{%- endmacro -%}
+{%- macro renderChoiceList(question, reply, path, humanIdentifier) -%}
+{%- if question.choiceUuids|length > 0 -%}
+\begin{itemize}
+{%- for choiceUuid in question.choiceUuids -%}
+{%- set choice = km.entities.choices[choiceUuid] -%}
+{%- if choiceUuid in reply|reply_items %}
+  \item[\CheckmarkBold] {{ choice.label }}
+{%- else %}
+  \item[\XSolidBrush] {{ choice.label }}
+{%- endif -%}
+{%- endfor %}
+\end{itemize}
+{%- endif %}
+{%- endmacro -%}
+{#- ------------------------------------------------------------------------------------ -#}
+{#-  QUESTION REPLY MACROS                                                               -#}
+{#- ------------------------------------------------------------------------------------ -#}
+{%- macro renderQuestionReply(question, path, humanIdentifier) -%}
+  {%- set isRequired = question.requiredPhaseUuid and phasesMap[question.requiredPhaseUuid] <= currentPhaseIndex -%}
+  {%- set reply = repliesMap[path] -%}
+  {%- if reply and reply.value -%}
+    {%- if question.questionType == "ValueQuestion" and reply.value.type == "StringReply" -%}
+      {{ renderAnswerValue(question, reply, path, humanIdentifier) }}
+    {%- elif question.questionType == "OptionsQuestion" and reply.value.type == "AnswerReply" -%}
+      {{ renderAnswerOption(question, reply, path, humanIdentifier) }}
+    {%- elif question.questionType == "ListQuestion" and reply.value.type == "ItemListReply" -%}
+      {{ renderAnswerList(question, reply, path, humanIdentifier) }}
+    {%- elif question.questionType == "IntegrationQuestion" and reply.value.type == "IntegrationReply" -%}
+      {{ renderAnswerValue(question, reply, path, humanIdentifier) }}
+    {%- elif question.questionType == "MultiChoiceQuestion" and reply.value.type == "MultiChoiceReply" -%}
+      {{ renderChoiceList(question, reply, path, humanIdentifier) }}
+    {%- endif -%}
+  {% else %}
+\begin{itemize}
+  \item[{% if isRequired %}\textcolor{colorReqQ}{% endif %}\XSolidBrush] \textit{This question has not been answered yet!}
+\end{itemize}
+  {% endif -%}
+{%- endmacro -%}
+{#- ------------------------------------------------------------------------------------ -#}
+{#-  QUESTION EXTRAS MACRO                                                               -#}
+{#- ------------------------------------------------------------------------------------ -#}
+{%- macro renderQuestionExtras(question) -%}
+  {%- set resourcePageReferences = [] -%}
+  {%- for uuid in question.referenceUuids -%}
+    {%- if km.entities.references[uuid].referenceType == "ResourcePageReference" -%}
+      {%- do resourcePageReferences.append(km.entities.references[uuid]) -%}
+    {%- endif -%}
+  {%- endfor -%}
+  {%- set urlReferences = [] -%}
+  {%- for uuid in question.referenceUuids -%}
+    {%- if km.entities.references[uuid].referenceType == "URLReference" -%}
+      {%- do urlReferences.append(km.entities.references[uuid]) -%}
+    {%- endif -%}
+  {%- endfor -%}
+  {%- set tags = [] -%}
+  {%- for tagUuid in question.tagUuids -%}
+    {%- if tagUuid in km.entities.tags.keys() -%}
+        {%- do tags.append(km.entities.tags[tagUuid]) -%}
+    {%- endif -%}
+  {%- endfor -%}
+  {%- if resourcePageReferences|length > 0 or urlReferences|length > 0 or tags|length > 0 or question.expertUuids|length > 0 %}
+\begin{itemize}
+  {%- if tags|length > 0 %}
+  \item \textit{Tags}: {% for tag in tags %}{% set color = tag.color[1:] if tag.color[0] == "#" else tag.color %}\setulcolor{{ "{" }}{{color}}{{ "}" }}\ul{{ "{" }}{{tag.name}}{{ "}" }}{% if not loop.last%}, {% endif %}{% endfor %}
+  {% endif %}
+  {%- if resourcePageReferences|length > 0 %}
+  \item \textit{Data Stewardship for Open Science}: {% for reference in resourcePageReferences -%}
+    \href{{ "{" }}{{ (ctx.config.clientUrl ~ "/book-references/" ~ reference.shortUuid) }}{{ "}" }}{{ "{" }}{{ reference.shortUuid }}{{ "}" }}
+    {%- if not loop.last -%}, {% endif -%}{%- endfor -%}
+  {%- endif -%}
+  {%- if urlReferences|length > 0 %}
+  \item \textit{External Links}: {% for reference in urlReferences -%}
+    \href{{ "{" }}{{ reference.url }}{{ "}" }}{{ "{" }}{{ reference.label }}{{ "}" }}
+    {%- if not loop.last -%}, {% endif -%}{%- endfor -%}
+  {%- endif -%}
+  {% if question.expertUuids|length > 0 %}
+  \item \textit{Experts}: {% for expertUuid in question.expertUuids -%}{%- set expert = km.entities.experts[expertUuid] -%}
+    {{expert.name}} $\langle$\href{{ "{" }}mailto:{{ expert.email }}{{ "}" }}{{ "{" }}{{ expert.email }}{{ "}" }}$\rangle$
+    {%- if not loop.last -%}, {% endif -%}{%- endfor -%}
+  {%- endif -%}
+\end{itemize}
+  {%- endif -%}
+{%- endmacro -%}
+{#- ------------------------------------------------------------------------------------ -#}
+{#-  QUESTION MACROS                                                                     -#}
+{#- ------------------------------------------------------------------------------------ -#}
+{%- macro renderQuestion(question, path, humanIdentifier, topLevel) -%}
+{%- set path = path ~ "." ~ question.uuid -%}
+{% if topLevel %}
+\section*{{ "{" }}\protect\textcolor{colorSecId}{{ "{" }}{{humanIdentifier}}{{ "}" }} {{question.title}}{{ "}" }}
+{% else %}
+\subsection*{{ "{" }}\protect\textcolor{colorSecId}{{ "{" }}{{humanIdentifier}}{{ "}" }} {{question.title}}{{ "}" }}
+{% endif %}
+\label{{ "{" }}{{path}}{{ "}" }}
+% uuid: {{question.uuid}}
+% path: {{path}}
+
+{{ renderQuestionExtras(question) }}
+
+{% if question.text %}
+\noindent
+\begin{markdown}
+{{question.text}}
+\end{markdown}
+{% endif %}
+
+{{ renderQuestionReply(question, path, humanIdentifier) }}
+
+{%- endmacro -%}
+{#- ------------------------------------------------------------------------------------ -#}
+{#-  REPORT MACROS                                                                       -#}
+{#- ------------------------------------------------------------------------------------ -#}
+{%- macro progresBar(value) -%}
+{%- set color = "colorBarAwful" -%}
+{%- if value > 0.95 -%}
+  {%- set color = "colorBarAwesome" -%}
+{%- elif value > 0.8 -%}
+  {%- set color = "colorBarNice" -%}
+{%- elif value > 0.6 -%}
+  {%- set color = "colorBarGood" -%}
+{%- elif value > 0.4 -%}
+  {%- set color = "colorBarAverage" -%}
+{%- elif value > 0.2 -%}
+  {%- set color = "colorBarBad" -%}
+{%- endif -%}
+\progressbar[subdivisions=10,width=15em,heighta=10pt,filledcolor={{color}}]{{ "{" }}{{value}}{{ "}" }}
+{%- endmacro -%}
+{%- macro renderReport(report) -%}
+\begin{table}[h]
+  \centering
+  \begin{tabular}{ l c r }
+{%- for indication in report.indications -%}
+{%- set total = indication.answeredQuestions + indication.unansweredQuestions -%}
+{%- set percent = 0 if total == 0 else indication.answeredQuestions / total %}
+    Answered {% if indication.indicationType == "PhasesAnsweredIndication" %}(current phase){% endif %} & {{indication.answeredQuestions}} / {{total}} & {{ progresBar(percent) }} \\
+{%- endfor %}
+    & & \\ \hline
+    & & \\
+{%- if report.metrics|length > 0 %}
+{%- for metric in report.metrics %}
+    {{km.entities.metrics[metric.metricUuid].title}} & {{ "%.2f"|format(metric.measure) }} & {{ progresBar(metric.measure) }} \\
+{%- endfor -%}
+{%- endif %}
+  \end{tabular}
+\end{table}
+{%- endmacro -%}
+{#- ------------------------------------------------------------------------------------ -#}
+{#-  INTRODUCTION                                                                        -#}
+{#- ------------------------------------------------------------------------------------ -#}
+\documentclass[a4paper,12pt]{report}
+\usepackage[utf8]{inputenc}
+\usepackage[english]{babel}
+
+\usepackage{geometry}
+\geometry{
+	a4paper,
+	left=20mm,
+	top=20mm,
+	bottom=20mm,
+	right=20mm,
+}
+
+\usepackage{bbding}
+\usepackage{color}
+\usepackage{xcolor}
+\usepackage{soul}
+\usepackage{hyperref}
+\usepackage[hashEnumerators,smartEllipses]{markdown}
+\usepackage{progressbar}
+
+\renewcommand{\thechapter}{\Roman{chapter}}
+
+\setul{0.3ex}{0.3ex}
+
+% Custom colors
+\definecolor{colorSecId}{HTML}{0060c7}
+\definecolor{colorReqQ}{HTML}{FF0000}
+% Progress bar colors
+\definecolor{colorBarAwful}{HTML}{DC3545}
+\definecolor{colorBarBad}{HTML}{EA6D2C}
+\definecolor{colorBarAverage}{HTML}{D4BC13}
+\definecolor{colorBarGood}{HTML}{A9B720}
+\definecolor{colorBarNice}{HTML}{7EB12C}
+\definecolor{colorBarAwesome}{HTML}{28A745}
+% Colors for tags (underline)
+{%- for tag in km.entities.tags.values() -%}
+{%- set color = tag.color[1:] if tag.color[0] == "#" else tag.color %}
+\definecolor{{ "{" }}{{color}}{{ "}" }}{HTML}{{ "{" }}{{color}}{{ "}" }}
+{%- endfor %}
+
+\begin{document}
+
+\begin{titlepage}
+    \begin{center}
+        \vspace*{1cm}
+            
+        \Huge
+        \textbf{{ "{" }}{{ ctx.questionnaireName }}{{ "}" }}
+            
+        \vspace{0.5cm}
+        \LARGE
+        Questionnaire Report 
+            
+        \vspace{1.5cm}
+            
+{%- if ctx.createdBy %}
+        \Large
+        \textbf{{ "{" }}{{ ctx.createdBy.firstName }} {{ ctx.createdBy.lastName }}{{ "}" }}\\
+        {{ctx.createdBy.email}}
+{%- endif %}
+        \vspace{1.5cm}
+
+        \normalsize
+        Based on\\
+        {{ ctx.package.name }}, {{ ctx.package.version }}\\
+        \texttt{{"{"}}{{ ctx.package.organizationId }}:{{ ctx.package.kmId }}:{{ ctx.package.version }}{{"}"}}\\
+        {%- for version in ctx.questionnaireVersions if version.uuid == ctx.questionnaireVersion %}
+        \vspace{0.5cm}
+        Version: {{ version.name }} ({{ version.createdAt|datetime_format("%d %b %Y %H:%M:%S") }} UTC)\\
+        {%- endfor %}
+        {%- if ctx.phaseUuid %}
+        \vspace{0.5cm}
+        Project phase: {{ km.entities.phases[ctx.phaseUuid].title }}\\
+        {%- endif %}
+            
+        \vfill
+            
+        \Large
+        {{ "{" }}{{ ctx.createdAt|datetime_format("%d %b %Y") }}{{ "}" }}
+            
+        \vspace{0.8cm}
+        
+        \normalsize
+        Document generated by \href{https://ds-wizard.org}{Data Stewardship Wizard}
+    \end{center}
+\end{titlepage}
+
+\chapter*{Report Summary}
+
+{{ renderReport(ctx.report.totalReport) }}
+
+{% for chapterUuid in km.chapterUuids %}
+{% set chapterId = loop.index|roman %}
+{% set chapter = km.entities.chapters[chapterUuid] %}
+\chapter{{ "{" }}{{chapter.title}}{{ "}" }}
+\label{{ "{" }}{{chapter.uuid}}{{ "}" }}
+% uuid: {{chapter.uuid}}
+% path: {{chapter.uuid}}
+
+{%- if chapter.text %}
+\begin{markdown}
+{{chapter.text}}
+\end{markdown}
+{%- endif %}
+
+{% set chapterReports = ctx.report.chapterReports|selectattr("chapterUuid", "equalto", chapter.uuid)|list %}
+{% for chapterReport in chapterReports %}
+\section*{Chapter Summary}
+{{ renderReport(chapterReport) }}
+{% endfor %}
+
+{% for questionUuid in chapter.questionUuids %}
+{% if questionUuid in km.entities.questions.keys() %}
+{{ renderQuestion(km.entities.questions[questionUuid], chapter.uuid, chapterId ~ "." ~ loop.index, True) }}
+{% endif %}
+{% endfor %}
+
+{% endfor %}
+
+\end{document}

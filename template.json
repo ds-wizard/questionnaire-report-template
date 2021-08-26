@@ -39,7 +39,7 @@
             {
                 "name" : "jinja",
                 "options" : {
-                    "template" : "default.html.j2",
+                    "template" : "src/default.html.j2",
                     "content-type" : "text/html",
                     "extension" : "html"
                 }
@@ -56,7 +56,7 @@
             {
                 "name" : "jinja",
                 "options" : {
-                    "template" : "default.html.j2",
+                    "template" : "src/default.html.j2",
                     "content-type" : "text/html",
                     "extension" : "html"
                 }
@@ -79,16 +79,9 @@
             {
                 "name" : "jinja",
                 "options" : {
-                    "template" : "default.html.j2",
-                    "content-type" : "text/html",
-                    "extension" : "html"
-                }
-            }, 
-            {
-                "name" : "pandoc",
-                "options" : {
-                    "from" : "html",
-                    "to" : "latex"
+                    "template" : "src/default.tex.j2",
+                    "content-type" : "text/x-tex",
+                    "extension" : "tex"
                 }
             }
         ]
@@ -103,7 +96,7 @@
             {
                 "name" : "jinja",
                 "options" : {
-                    "template" : "default.html.j2",
+                    "template" : "src/for-word.html.j2",
                     "content-type" : "text/html",
                     "extension" : "html"
                 }
@@ -112,35 +105,12 @@
                 "name" : "pandoc",
                 "options" : {
                     "from" : "html",
-                    "to" : "docx"
+                    "to" : "docx",
+                    "args": "--filter=pandoc-docx-pagebreakpy --reference-doc=src/reference.docx"
                 }
             }
         ]
-    }, 
-    {
-        "uuid" : "15e53172-bbae-4a0c-a4d9-8f3ddf60e7b6",
-        "name" : "OpenDocument Text",
-        "shortName" : "odt",
-        "icon" : "far fa-file-alt",
-        "color" : "#f15a24",
-        "steps" : [ 
-            {
-                "name" : "jinja",
-                "options" : {
-                    "template" : "default.html.j2",
-                    "content-type" : "text/html",
-                    "extension" : "html"
-                }
-            }, 
-            {
-                "name" : "pandoc",
-                "options" : {
-                    "from" : "html",
-                    "to" : "odt"
-                }
-            }
-        ]
-    }, 
+    },
     {
         "uuid" : "f0533e48-f4c5-4af2-b2c1-5a47d4a247c0",
         "name" : "Markdown Document",
@@ -151,27 +121,19 @@
             {
                 "name" : "jinja",
                 "options" : {
-                    "template" : "default.html.j2",
+                    "template" : "src/default.md.j2",
                     "content-type" : "text/html",
-                    "extension" : "html"
-                }
-            }, 
-            {
-                "name" : "pandoc",
-                "options" : {
-                    "from" : "html",
-                    "to" : "markdown"
+                    "extension" : "md"
                 }
             }
         ]
     }
   ],
   "_tdk": {
-    "version": "2.12.0",
+    "version": "3.2.0",
     "readmeFile": "README.md",
     "files": [
-      "default.css",
-      "default.html.j2"
+      "src/**/*"
     ]
   },
   "createdAt": "2020-01-01T08:00:00Z",
