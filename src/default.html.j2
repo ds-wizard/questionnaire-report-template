@@ -2,67 +2,40 @@
 {# ------------------------------------------------------------------------------------ #}
 {#  VARIABLES                                                                           #}
 {# ------------------------------------------------------------------------------------ #}
-{%- set km = ctx.knowledgeModel -%}
-{%- set repliesMap = ctx.questionnaireReplies -%}
+{%- set dc = ctx|to_context_obj -%}
 {# ------------------------------------------------------------------------------------ #}
-{#  PHASES                                                                              #}
+{#  TAGS, REFERENCES, and EXPERTS MACROS                                                 #}
 {# ------------------------------------------------------------------------------------ #}
-{%- set phasesMap = dict() -%}
-{%- for phaseUuid in km.phaseUuids -%}
-  {%- do phasesMap.update({phaseUuid: loop.index}) -%}
-{%- endfor -%}
-{%- set currentPhaseIndex = -1 %}
-{%- if ctx.phaseUuid -%}
-  {%- set currentPhaseIndex = phasesMap[ctx.phaseUuid] %}
-{%- endif -%}
-{# ------------------------------------------------------------------------------------ #}
-{#  TAGS, REFERNCES, and EXPERTS MACROS                                                 #}
-{# ------------------------------------------------------------------------------------ #}
-{%- macro renderResourcePageReferences(referenceUuids) -%}
-  {% set resourcePageReferences = [] %}
-  {% for uuid in referenceUuids %}
-    {% if km.entities.references[uuid].referenceType == "ResourcePageReference" %}
-      {% do resourcePageReferences.append(km.entities.references[uuid]) %}
-    {% endif %}
-  {% endfor %}
-  {% if resourcePageReferences|length > 0 %}
+{%- macro renderResourcePageReferences(question) -%}
+  {% set refs = question.resource_page_references %}
+  {% if refs|length > 0 %}
     <div class="references references-resourcepage">
       <svg aria-hidden="true" data-prefix="fas" data-icon="book" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512" class="svg-inline--fa fa-book fa-w-14 fa-2x"><path fill="currentColor" d="M448 360V24c0-13.3-10.7-24-24-24H96C43 0 0 43 0 96v320c0 53 43 96 96 96h328c13.3 0 24-10.7 24-24v-16c0-7.5-3.5-14.3-8.9-18.7-4.2-15.4-4.2-59.3 0-74.7 5.4-4.3 8.9-11.1 8.9-18.6zM128 134c0-3.3 2.7-6 6-6h212c3.3 0 6 2.7 6 6v20c0 3.3-2.7 6-6 6H134c-3.3 0-6-2.7-6-6v-20zm0 64c0-3.3 2.7-6 6-6h212c3.3 0 6 2.7 6 6v20c0 3.3-2.7 6-6 6H134c-3.3 0-6-2.7-6-6v-20zm253.4 250H96c-17.7 0-32-14.3-32-32 0-17.6 14.4-32 32-32h285.4c-1.9 17.1-1.9 46.9 0 64z" class=""></path></svg>
       <span><b>Data Stewardship for Open Science:</b></span>
-      {% for reference in resourcePageReferences %}
-        {% if reference.referenceType == "ResourcePageReference" %}
-          <a id="{{reference.uuid}}" class="reference resourcepage-link" href="{{ ("https://demo.ds-wizard.org/book-references/" ~ reference.shortUuid) }}" target="_blank"><i>{{reference.shortUuid}}</i></a>
-        {% endif %}
+      {% for reference in refs %}
+        <a id="{{reference.uuid}}" class="reference resourcepage-link" href="{{ reference.url }}" target="_blank"><i>{{reference.short_uuid}}</i></a>
       {% endfor %}
     </div>
   {% endif %}
 {%- endmacro -%}
-{%- macro renderURLReferences(referenceUuids) -%}
-  {% set urlReferences = [] %}
-  {% for uuid in referenceUuids %}
-    {% if km.entities.references[uuid].referenceType == "URLReference" %}
-      {% do urlReferences.append(km.entities.references[uuid]) %}
-    {% endif %}
-  {% endfor %}
-  {% if urlReferences|length > 0 %}
+{%- macro renderURLReferences(question) -%}
+  {% set refs = question.url_references %}
+  {% if refs|length > 0 %}
     <div class="references references-url" >
       <svg aria-hidden="true" data-prefix="far" data-icon="external-link" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512" class="svg-inline--fa fa-external-link fa-w-18 fa-2x"><path fill="currentColor" d="M576 14.4l-.174 163.2c0 7.953-6.447 14.4-14.4 14.4H528.12c-8.067 0-14.56-6.626-14.397-14.691l2.717-73.627-2.062-2.062-278.863 278.865c-4.686 4.686-12.284 4.686-16.971 0l-23.029-23.029c-4.686-4.686-4.686-12.284 0-16.971L474.379 61.621l-2.062-2.062-73.626 2.717C390.626 62.44 384 55.946 384 47.879V14.574c0-7.953 6.447-14.4 14.4-14.4L561.6 0c7.953 0 14.4 6.447 14.4 14.4zM427.515 233.74l-24 24a12.002 12.002 0 0 0-3.515 8.485V458a6 6 0 0 1-6 6H54a6 6 0 0 1-6-6V118a6 6 0 0 1 6-6h301.976c10.691 0 16.045-12.926 8.485-20.485l-24-24A12.002 12.002 0 0 0 331.976 64H48C21.49 64 0 85.49 0 112v352c0 26.51 21.49 48 48 48h352c26.51 0 48-21.49 48-48V242.225c0-10.691-12.926-16.045-20.485-8.485z" class=""></path></svg>
       <b>External Links:</b>
-      {% for reference in urlReferences %}
-        {% if reference.referenceType == "URLReference" %}
-          <a id="{{reference.uuid}}" class="reference url-link" href="{{reference.url}}" target="_blank"><i>{{reference.label}}</i></a>
-        {% endif %}
+      {% for reference in refs %}
+        <a id="{{reference.uuid}}" class="reference url-link" href="{{reference.url}}" target="_blank"><i>{{reference.label}}</i></a>
       {% endfor %}
     </div>
   {% endif %}
 {%- endmacro -%}
-{%- macro renderExperts(expertUuids) -%}
-  {% if expertUuids|length > 0 %}
+{%- macro renderExperts(question) -%}
+  {% if question.experts|length > 0 %}
     <div class="experts">
       <svg aria-hidden="true" data-prefix="far" data-icon="address-book" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512" class="svg-inline--fa fa-address-book fa-w-14 fa-2x"><path fill="currentColor" d="M436 160c6.6 0 12-5.4 12-12v-40c0-6.6-5.4-12-12-12h-20V48c0-26.5-21.5-48-48-48H48C21.5 0 0 21.5 0 48v416c0 26.5 21.5 48 48 48h320c26.5 0 48-21.5 48-48v-48h20c6.6 0 12-5.4 12-12v-40c0-6.6-5.4-12-12-12h-20v-64h20c6.6 0 12-5.4 12-12v-40c0-6.6-5.4-12-12-12h-20v-64h20zm-68 304H48V48h320v416zM208 256c35.3 0 64-28.7 64-64s-28.7-64-64-64-64 28.7-64 64 28.7 64 64 64zm-89.6 128h179.2c12.4 0 22.4-8.6 22.4-19.2v-19.2c0-31.8-30.1-57.6-67.2-57.6-10.8 0-18.7 8-44.8 8-26.9 0-33.4-8-44.8-8-37.1 0-67.2 25.8-67.2 57.6v19.2c0 10.6 10 19.2 22.4 19.2z" class=""></path></svg>
       <b>Experts:</b>
-      {% for expertUuid in expertUuids %}
-        {% set expert = km.entities.experts[expertUuid] %}
+      {% for expert in question.experts %}
         <i class="expert">{{expert.name}} (<a href="mailto:{{expert.email}}">{{expert.email}}</a>)</i>
       {% endfor %}
     </div>
@@ -75,17 +48,17 @@
   <div class="answer-block answer-simple" id="{{path}}" data-path="{{path}}" data-type="answer">
     <p class="answer">
       <svg aria-hidden="true" data-prefix="fas" data-icon="check" class="svg-inline--fa fa-check fa-w-16" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path fill="currentColor" d="M173.898 439.404l-166.4-166.4c-9.997-9.997-9.997-26.206 0-36.204l36.203-36.204c9.997-9.998 26.207-9.998 36.204 0L192 312.69 432.095 72.596c9.997-9.997 26.207-9.997 36.204 0l36.203 36.204c9.997 9.997 9.997 26.206 0 36.204l-294.4 294.401c-9.998 9.997-26.207 9.997-36.204-.001z"></path></svg>
-      {% if reply.value.type == "StringReply" %}
-        <span>{{reply.value.value}}</span>
+      {% if reply is of_type("StringReply") %}
+        <span>{{reply.value}}</span>
       {% else %}
-        <span>{{reply.value.value.value}}</span>
-        {% if reply.value.value.type == "IntegrationType" and reply.value.value.id %}
+        <span>{{reply.value}}</span>
+        {% if reply.is_integration %}
           {# Integration #}
-          {% set integration = km.entities.integrations[question.integrationUuid] %}
+          {% set integration = question.integration %}
           <div class="integration-link">
             {% if integration.logo %}<img src="{{ integration.logo }}" alt="{{ integration.name }}">{% endif %}
-            <a href="{{ integration.itemUrl|replace('${id}', reply.value.value.id) }}">
-              {{ integration.itemUrl|replace("${id}", reply.value.value.id) }}
+            <a href="{{ integration.item(reply.item_id) }}">
+              {{ integration.item(reply.item_id) }}
             </a>
           </div>
         {% endif %}
@@ -94,9 +67,8 @@
   </div>
 {%- endmacro -%}
 {%- macro renderAnswerOption(question, reply, path, humanIdentifier) -%}
-  {% set replyValue = reply|reply_str_value %}
-  {% set hi = question.answerUuids.index(replyValue) %}
-  {% set answer = km.entities.answers[replyValue] %}
+  {% set hi = question.answers.index(reply.answer) %}
+  {% set answer = reply.answer %}
   {% set path = path ~ "." ~ answer.uuid %}
   {% set humanIdentifier = humanIdentifier ~ "." ~ hi|of_alphabet %}
   <div class="answer-block answer-option" id="{{path}}" data-path="{{path}}" data-uuid="{{answer.uuid}}" data-type="answer">
@@ -109,14 +81,12 @@
         {{answer.advice|markdown}}
       </div>
     {% endif %}
-    {% if answer.followUpUuids|length > 0 %}
+    {% if answer.followups|length > 0 %}
       <div class="followups">
         {% set hiPrefix = humanIdentifier ~ "." %}
-        {% for questionUuid in answer.followUpUuids %}
+        {% for question in answer.followups %}
           {% set x = loop.index %}
-          {% if questionUuid in km.entities.questions.keys() %}
-            {{ renderQuestion(km.entities.questions[questionUuid], path, hiPrefix ~ x) }}
-          {% endif %}
+          {{ renderQuestion(question, path, hiPrefix ~ x) }}
         {% endfor %}
       </div>
     {% endif %}
@@ -127,16 +97,14 @@
     <h4>Answers</h4>
     {% set itemPathPrefix = path ~ "." %}
     {% set hiPrefix = humanIdentifier ~ "." %}
-    {% for i in reply|reply_items %}
+    {% for i in reply.items %}
       {% set itemPath = itemPathPrefix ~ i %}
       {% set itemHumanIdenfifier = hiPrefix ~ (loop.index - 1)|of_alphabet %}
       <div class="answer-item" id="{{itemPath}}">
         <div class="followups">
-          {% for questionUuid in question.itemTemplateQuestionUuids %}
+          {% for question in question.followups %}
             {% set x = loop.index %}
-            {% if questionUuid in km.entities.questions.keys() %}
-              {{ renderQuestion(km.entities.questions[questionUuid], itemPath, itemHumanIdenfifier ~ "." ~ x) }}
-            {% endif %}
+            {{ renderQuestion(question, itemPath, itemHumanIdenfifier ~ "." ~ x) }}
           {% else %}
             No follow up questions
           {% endfor %}
@@ -150,9 +118,8 @@
 {%- macro renderChoiceList(question, reply, path, humanIdentifier) -%}
   <div class="answer-block answer-items" id="{{path}}" data-path="{{path}}" data-type="answer">
     <div class="choices-list">
-    {% for choiceUuid in question.choiceUuids %}
-      {%- set choice = km.entities.choices[choiceUuid] -%}
-      {%- if choiceUuid in reply|reply_items %}
+    {% for choice in question.choices %}
+      {%- if choice in reply.choices %}
         <div class="choice choice-selected">
           <svg aria-hidden="true" focusable="false" data-prefix="far" data-icon="check-square" class="svg-inline--fa fa-check-square fa-w-14" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path fill="currentColor" d="M400 32H48C21.49 32 0 53.49 0 80v352c0 26.51 21.49 48 48 48h352c26.51 0 48-21.49 48-48V80c0-26.51-21.49-48-48-48zm0 400H48V80h352v352zm-35.864-241.724L191.547 361.48c-4.705 4.667-12.303 4.637-16.97-.068l-90.781-91.516c-4.667-4.705-4.637-12.303.069-16.971l22.719-22.536c4.705-4.667 12.303-4.637 16.97.069l59.792 60.277 141.352-140.216c4.705-4.667 12.303-4.637 16.97.068l22.536 22.718c4.667 4.706 4.637 12.304-.068 16.971z"></path></svg>
           {{ choice.label }}
@@ -171,31 +138,31 @@
 {#  QUESTION MACROS                                                                     #}
 {# ------------------------------------------------------------------------------------ #}
 {%- macro questionClasses(question) -%}
-  "question {{ "required" if (question.requiredPhaseUuid and phasesMap[question.requiredPhaseUuid] <= currentPhaseIndex) else "optional"}} {{  ("phase-" ~ phasesMap[question.requiredPhaseUuid]) if question.requiredPhaseUuid else "phase-none" }}"
+  "question {{ "required" if question.is_required else "optional"}} {{  ("phase-" ~ question.required_phase.order) if question.required_phase else "phase-none" }}"
 {%- endmacro -%}
 {%- macro renderQuestionExtras(question) -%}
   <div class="extra-data">
     {# Question - References - Resource Page References #}
-    {{ renderResourcePageReferences(question.referenceUuids) }}
+    {{ renderResourcePageReferences(question) }}
     {# Question - References - URL References #}
-    {{ renderURLReferences(question.referenceUuids) }}
+    {{ renderURLReferences(question) }}
     {# Question - Experts #}
-    {{ renderExperts(question.expertUuids) }}
+    {{ renderExperts(question) }}
   </div>
 {%- endmacro -%}
 {%- macro renderQuestionReply(question, path, humanIdentifier) -%}
   {# Question - Answers #}
-  {% set reply = repliesMap[path] %}
+  {% set reply = question.replies.get(path) %}
   {% if reply and reply.value %}
-    {% if question.questionType == "ValueQuestion" and reply.value.type == "StringReply" %}
+    {% if question is of_type("ValueQuestion") and reply is of_type("StringReply") %}
       {{ renderAnswerValue(question, reply, path, humanIdentifier) }}
-    {% elif question.questionType == "OptionsQuestion" and reply.value.type == "AnswerReply" %}
+    {% elif question is of_type("OptionsQuestion") and reply is of_type("AnswerReply") %}
       {{ renderAnswerOption(question, reply, path, humanIdentifier) }}
-    {% elif question.questionType == "ListQuestion" and reply.value.type == "ItemListReply" %}
+    {% elif question is of_type("ListQuestion") and reply is of_type("ItemListReply") %}
       {{ renderAnswerList(question, reply, path, humanIdentifier) }}
-    {% elif question.questionType == "IntegrationQuestion" and reply.value.type == "IntegrationReply" %}
+    {% elif question is of_type("IntegrationQuestion") and reply is of_type("IntegrationReply") %}
       {{ renderAnswerValue(question, reply, path, humanIdentifier) }}
-    {% elif question.questionType == "MultiChoiceQuestion" and reply.value.type == "MultiChoiceReply" %}
+    {% elif question is of_type("MultiChoiceQuestion") and reply is of_type("MultiChoiceReply") %}
       {{ renderChoiceList(question, reply, path, humanIdentifier) }}
     {% endif %}
   {% else %}
@@ -215,16 +182,10 @@
         <strong class="human-identifier">{{humanIdentifier}}</strong>
         {{question.title}}
       </h4>
-
-      {%- set tags = [] -%}
-      {% for tagUuid in question.tagUuids %}
-        {%- if tagUuid in km.entities.tags.keys() %}
-          {%- do tags.append(km.entities.tags[tagUuid]) %}
-        {%- endif %}
-      {% endfor %}
-      {% if tags|length > 0 %}
+      
+      {% if question.tags|length > 0 %}
       <div class="tags">
-        {% for tag in tags %}
+        {% for tag in question.tags %}
           <span class="tag" style="background-color:{{tag.color}}">{{tag.name}}</span>
         {% endfor %}
       </div>
@@ -249,14 +210,13 @@
     <div class="indications">
       <table>
         <tbody>
-          {% for indication in report.indications %}
-            {% set total = indication.answeredQuestions + indication.unansweredQuestions %}
+          {% for item in report.indications %}
             <tr>
-              <td class="table-label">Answered {% if indication.indicationType == "PhasesAnsweredIndication" %}(current phase){% endif %}</td>
-              <td>{{indication.answeredQuestions}} / {{total}} </td>
+              <td class="table-label">Answered {% if item.is_for_phase %}(current phase){% endif %}</td>
+              <td>{{item.answered}} / {{item.total}} </td>
               <td class="progress-cell">
                 <div class="progress">
-                  <div class="progress-fill" style="width:{{100 * indication.answeredQuestions / [1, total]|max}}%">
+                  <div class="progress-fill" style="width:{{100 * item.percentage}}%">
                   </div>
                 </div>
               </td>
@@ -270,15 +230,15 @@
         <table>
           <thead><tr><th>Metric</th><th colspan="2">Score</th></tr></thead>
           <tbody>
-            {% for metric in report.metrics %}
+            {% for item in report.metrics %}
               <tr>
                 <td class="table-label">
-                  {{km.entities.metrics[metric.metricUuid].title}}
+                  {{item.metric.title}}
                 </td>
-                <td>{{ "%.2f"|format(metric.measure) }}</td>
+                <td>{{ "%.2f"|format(item.measure) }}</td>
                 <td class="progress-cell">
                   <div class="progress">
-                    <div class="progress-fill bg-value-{{(metric.measure * 10)|int}}0" style="width:{{100 * metric.measure}}%">
+                    <div class="progress-fill bg-value-{{(item.measure * 10)|int}}0" style="width:{{100 * item.measure}}%">
                     </div>
                   </div>
                 </td>
@@ -295,17 +255,14 @@
         <h2 class="title">{{humanIdentifier|roman}}. {{chapter.title}}</h2>
         <p class="text-light">{{chapter.text|markdown}}</p>
 
-        {% set chapterReports = ctx.report.chapterReports|selectattr("chapterUuid", "equalto", chapter.uuid)|list %}
-        {% for chapterReport in chapterReports %}
+        {% for chapterReport in chapter.reports %}
           {{ renderReport(chapterReport) }}
         {% endfor %}
 
         <section class="questions">
           <h3 class="title">Questions</h3>
-          {% for questionUuid in chapter.questionUuids %}
-            {% if questionUuid in km.entities.questions.keys() %}
-              {{ renderQuestion(km.entities.questions[questionUuid], chapter.uuid, loop.index) }}
-            {% endif %}
+          {% for question in chapter.questions %}
+            {{ renderQuestion(question, chapter.uuid, loop.index) }}
           {% else %}
             <p class="text-light">No questions</p>
           {% endfor %}
@@ -317,38 +274,38 @@
 {# ------------------------------------------------------------------------------------ #}
 {%- macro renderFrontPage() -%}
   <header>
-    <h1>{{ctx.questionnaireName}}</h1>
+    <h1>{{dc.qtn.name}}</h1>
 
     <table class="dmp-data">
       <tr>
         <th>Organization</th>
-        <td>{{ctx.organization.name}}</td>
+        <td>{{dc.org.name}}</td>
       </tr>
-      {% if ctx.createdBy %}
+      {% if dc.qtn.created_by %}
       <tr>
         <th>Created by</th>
-        <td>{{ctx.createdBy.firstName}} {{ctx.createdBy.lastName}} (<a href="mailto:{{ctx.createdBy.email}}">{{ctx.createdBy.email}}</a>)</td>
+        <td>{{dc.qtn.created_by.first_name}} {{dc.qtn.created_by.last_name}} (<a href="mailto:{{dc.qtn.created_by.email}}">{{dc.qtn.created_by.email}}</a>)</td>
       </tr>
       {% endif %}
       <tr>
         <th>Based on</th>
-        <td>{{ctx.package.name}}, {{ctx.package.version}} (<span class="package-id"><span class="organization-id">{{ctx.package.organizationId}}</span>:<span class="km-id">{{ctx.package.kmId}}</span>:<span class="version">{{ctx.package.version}}</span></span>)</td>
+        <td>{{dc.pkg.name}}, {{dc.pkg.version}} (<span class="package-id"><span class="organization-id">{{dc.pkg.org_id}}</span>:<span class="km-id">{{dc.pkg.km_id}}</span>:<span class="version">{{dc.pkg.version}}</span></span>)</td>
       </tr>
-      {% for version in ctx.questionnaireVersions if version.uuid == ctx.questionnaireVersion %}
+      {% for version in dc.qtn.versions if version.uuid == dc.qtn.version %}
       <tr>
         <th>Version</th>
-        <td>{{version.name}} ({{ version.createdAt|datetime_format("%d %b %Y %H:%M:%S") }} UTC)</td>
+        <td>{{version.name}} ({{ version.created_at|datetime_format("%d %b %Y %H:%M:%S") }} UTC)</td>
       </tr>
       {% endfor %}
-      {% if ctx.phaseUuid %}
+      {% if dc.current_phase %}
       <tr>
         <th>Project Phase</th>
-        <td>{{km.entities.phases[ctx.phaseUuid].title}}</td>
+        <td>{{dc.current_phase.title}}</td>
       </tr>
       {% endif %}
       <tr>
         <th>Created at</th>
-        <td>{{ ctx.createdAt|datetime_format("%d %b %Y") }}</td>
+        <td>{{ dc.doc.created_at|datetime_format("%d %b %Y") }}</td>
       </tr>
     </table>
     <p class="tool-info">
@@ -360,10 +317,10 @@
 {%- macro renderContent() -%}
   <main>
     <section class="total-report">
-      {{ renderReport(ctx.report.totalReport) }}
+      {{ renderReport(dc.report.total_report) }}
     </section>
-    {% for chapterUuid in km.chapterUuids %}
-      {{ renderChapter(km.entities.chapters[chapterUuid], loop.index) }}
+    {% for chapter in dc.km.chapters %}
+      {{ renderChapter(chapter, loop.index) }}
     {% else %}
       <p class="text-light">No chapters</p>
     {% endfor %}
@@ -374,7 +331,7 @@
 {# ------------------------------------------------------------------------------------ #}
 <html>
   <head>
-    <title>DSW Questionnaire Report: {{ctx.questionnaireName}}</title>
+    <title>DSW Questionnaire Report: {{dc.qtn.name}}</title>
     <meta charset="utf-8">
     <style>{% include "src/default.css" %}</style>
   </head>

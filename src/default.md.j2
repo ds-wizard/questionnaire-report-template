@@ -1,101 +1,67 @@
 {#- ------------------------------------------------------------------------------------ -#}
 {#-  VARIABLES                                                                           -#}
 {#- ------------------------------------------------------------------------------------ -#}
-{%- set km = ctx.knowledgeModel -%}
-{%- set repliesMap = ctx.questionnaireReplies -%}
-{#- ------------------------------------------------------------------------------------ -#}
-{#-  PHASES                                                                              -#}
-{#- ------------------------------------------------------------------------------------ -#}
-{%- set phasesMap = dict() -%}
-{%- for phaseUuid in km.phaseUuids -%}
-{%- do phasesMap.update({phaseUuid: loop.index}) -%}
-{%- endfor -%}
-{%- set currentPhaseIndex = -1 %}
-{%- if ctx.phaseUuid -%}
-{%- set currentPhaseIndex = phasesMap[ctx.phaseUuid] %}
-{%- endif -%}
+{%- set dc = ctx|to_context_obj -%}
 {#- ------------------------------------------------------------------------------------ -#}
 {#-  TAGS, REFERENCES, and EXPERTS MACROS                                                 -#}
 {#- ------------------------------------------------------------------------------------ -#}
-{%- macro renderTags(tagUuids) -%}
-{%- set tags = [] -%}
-{%- for tagUuid in tagUuids -%}
-{%- if tagUuid in km.entities.tags.keys() -%}
-{%- do tags.append(km.entities.tags[tagUuid]) -%}
-{%- endif -%}
-{%- endfor -%}
-{%- if tags|length > 0 %}
-* 🏷️ **Tags:** {% for tag in tags %}*{{tag.name}}*{% if not loop.last %}, {% endif %}{% endfor %}
+{%- macro renderTags(question) -%}
+{%- if question.tags|length > 0 %}
+* 🏷️ **Tags:** {% for tag in question.tags %}*{{tag.name}}*{% if not loop.last %}, {% endif %}{% endfor %}
 {%- endif %}
 {%- endmacro -%}
-{%- macro renderResourcePageReferences(referenceUuids) -%}
-{%- set resourcePageReferences = [] -%}
-{%- for uuid in referenceUuids -%}
-{%- if km.entities.references[uuid].referenceType == "ResourcePageReference" -%}
-{%- do resourcePageReferences.append(km.entities.references[uuid]) -%}
-{%- endif -%}
-{%- endfor -%}
-{%- if resourcePageReferences|length > 0 %}
-* 📖 **Data Stewardship for Open Science:** {% for reference in resourcePageReferences if reference.referenceType == "ResourcePageReference" %}[{{reference.shortUuid}}]({{ctx.config.clientUrl ~ "/book-references/" ~ reference.shortUuid}}){% if not loop.last %}, {% endif %}{% endfor %}
+{%- macro renderResourcePageReferences(question) -%}
+{% set refs = question.resource_page_references %}
+{% if refs|length > 0 %}
+* 📖 **Data Stewardship for Open Science:** {% for reference in refs %}[{{reference.short_uuid}}]({{reference.url}}){% if not loop.last %}, {% endif %}{% endfor %}
 {%- endif -%}
 {%- endmacro -%}
-{%- macro renderURLReferences(referenceUuids) -%}
-{%- set urlReferences = [] -%}
-{%- for uuid in referenceUuids -%}
-{%- if km.entities.references[uuid].referenceType == "URLReference" -%}
-{%- do urlReferences.append(km.entities.references[uuid]) -%}
-{%- endif -%}
-{%- endfor -%}
-{%- if urlReferences|length > 0 %}
-* 🔗 **External links**: {% for reference in urlReferences if reference.referenceType == "URLReference" %}[{{reference.label}}]({{reference.url}}){% if not loop.last %}, {% endif %}{% endfor %}
+{%- macro renderURLReferences(question) -%}
+{% set refs = question.url_references %}
+{% if refs|length > 0 %}
+* 🔗 **External links**: {% for reference in refs %}[{{reference.label}}]({{reference.url}}){% if not loop.last %}, {% endif %}{% endfor %}
 {%- endif -%}
 {%- endmacro -%}
-{%- macro renderExperts(expertUuids) -%}
-{%- if expertUuids|length > 0 %}
-* 🙋 **Experts:** {% for expertUuid in expertUuids %}{% set expert = km.entities.experts[expertUuid] %}*{{expert.name}}* <{{expert.email}}>{% if not loop.last %}, {% endif %}{% endfor %}
+{%- macro renderExperts(question) -%}
+{% if question.experts|length > 0 %}
+* 🙋 **Experts:** {% for expert in question.experts %}*{{expert.name}}* <{{expert.email}}>{% if not loop.last %}, {% endif %}{% endfor %}
 {%- endif -%}
 {%- endmacro -%}
 {#- ------------------------------------------------------------------------------------ -#}
 {#-  ANSWERS MACROS                                                                      -#}
 {#- ------------------------------------------------------------------------------------ -#}
-{%- macro renderAnswerValue(question, reply, path, humanIdentifier) %}
-✔️ {% if reply.value.type == "StringReply" %}{{reply.value.value}}{% else %}{{reply.value.value.value}}
-{%- if reply.value.value.type == "IntegrationType" and reply.value.value.id %}{% set integration = km.entities.integrations[question.integrationUuid] -%}
-{%- set link = integration.itemUrl|replace("${id}", reply.value.value.id) %} ({{integration.name}}: [{{reply.value.value.id}}]({{link}}})){%- endif -%}
-{%- endif -%}
+{%- macro renderAnswerValue(question, reply, path, humanIdentifier) -%}
+✔️ {{reply.value}}
+{%- if reply.is_integration %}{% set integration = question.integration -%}
+ ({{integration.name}}: [{{reply.item_id}}]({{integration.item(reply.item_id)}}})){%- endif -%}
 {%- endmacro -%}
 {%- macro renderAnswerOption(question, reply, path, humanIdentifier) -%}
-{%- set replyValue = reply|reply_str_value -%}
-{%- set hi = question.answerUuids.index(replyValue) -%}
-{%- set answer = km.entities.answers[replyValue] -%}
+{% set hi = question.answers.index(reply.answer) %}
+{%- set answer = reply.answer -%}
 {%- set path = path ~ "." ~ answer.uuid -%}
-{%- set humanIdentifier = humanIdentifier ~ "." ~ hi|of_alphabet %}
+{%- set humanIdentifier = humanIdentifier ~ "." ~ hi|of_alphabet -%}
 ✔️ {{ hi|of_alphabet }}. {{answer.label}}
-{% if answer.advice %}
+{% if answer.advice -%}
 💡 {{answer.advice}}
 {%- endif -%}
-{%- if answer.followUpUuids|length > 0 -%}
+{%- if answer.followups|length > 0 -%}
 {%- set hiPrefix = humanIdentifier ~ "." -%}
-{%- for questionUuid in answer.followUpUuids -%}
+{%- for question in answer.followups -%}
 {%- set x = loop.index -%}
-{%- if questionUuid in km.entities.questions.keys() -%}
-{{ renderQuestion(km.entities.questions[questionUuid], path, hiPrefix ~ x) }}
-{%- endif -%}
+{{ renderQuestion(question, path, hiPrefix ~ x) }}
 {%- endfor -%}
 {%- endif -%}
 {%- endmacro -%}
-{%- macro renderAnswerList(question, reply, path, humanIdentifier) %}
+{%- macro renderAnswerList(question, reply, path, humanIdentifier) -%}
 {%- set itemPathPrefix = path ~ "." -%}
 {%- set hiPrefix = humanIdentifier ~ "." -%}
-{%- for i in reply|reply_items -%}
+{%- for i in reply.items -%}
 {%- set itemPath = itemPathPrefix ~ i -%}
 {%- set itemHumanIdenfifier = hiPrefix ~ (loop.index - 1)|of_alphabet -%}
-{%- for questionUuid in question.itemTemplateQuestionUuids -%}
+{%- for question in question.followups -%}
 {%- set x = loop.index -%}
-{%- if questionUuid in km.entities.questions.keys() %}
-{{ renderQuestion(km.entities.questions[questionUuid], itemPath, itemHumanIdenfifier ~ "." ~ x) }}
-{%- endif -%}
-{%- else %}
+{{ renderQuestion(question, itemPath, itemHumanIdenfifier ~ "." ~ x) }}
+{%- else -%}
 *No follow up questions*
 {%- endfor -%}
 {%- else %}
@@ -103,9 +69,8 @@
 {%- endfor -%}
 {%- endmacro -%}
 {%- macro renderChoiceList(question, reply, path, humanIdentifier) -%}
-{% for choiceUuid in question.choiceUuids -%}
-{%- set choice = km.entities.choices[choiceUuid] -%}
-{%- if choiceUuid in reply|reply_items %}
+{%- for choice in question.choices -%}
+{%- if choice in reply.choices %}
 * ✔️ {{ choice.label }}
 {%- else %}
 * ❌ {{ choice.label }}
@@ -116,32 +81,32 @@
 {#-  QUESTION MACROS                                                                     -#}
 {#- ------------------------------------------------------------------------------------ -#}
 {%- macro renderQuestionExtras(question) -%}
-{{- renderResourcePageReferences(question.referenceUuids) -}}
-{{- renderURLReferences(question.referenceUuids) -}}
-{{- renderExperts(question.expertUuids) -}}
+{{- renderResourcePageReferences(question) -}}
+{{- renderURLReferences(question) -}}
+{{- renderExperts(question) -}}
 {%- endmacro -%}
 {%- macro renderQuestionReply(question, path, humanIdentifier) -%}
-{%- set reply = repliesMap[path] -%}
+{%- set reply = question.replies.get(path) -%}
 {%- if reply and reply.value -%}
-{%- if question.questionType == "ValueQuestion" and reply.value.type == "StringReply" -%}
+{%- if question is of_type("ValueQuestion") and reply is of_type("StringReply") -%}
 {{ renderAnswerValue(question, reply, path, humanIdentifier) }}
-{%- elif question.questionType == "OptionsQuestion" and reply.value.type == "AnswerReply" -%}
+{%- elif question is of_type("OptionsQuestion") and reply is of_type("AnswerReply") -%}
 {{ renderAnswerOption(question, reply, path, humanIdentifier) }}
-{%- elif question.questionType == "ListQuestion" and reply.value.type == "ItemListReply" -%}
+{%- elif question is of_type("ListQuestion") and reply is of_type("ItemListReply") -%}
 {{ renderAnswerList(question, reply, path, humanIdentifier) }}
-{%- elif question.questionType == "IntegrationQuestion" and reply.value.type == "IntegrationReply" -%}
+{%- elif question is of_type("IntegrationQuestion") and reply is of_type("IntegrationReply") -%}
 {{ renderAnswerValue(question, reply, path, humanIdentifier) }}
-{%- elif question.questionType == "MultiChoiceQuestion" and reply.value.type == "MultiChoiceReply"-%}
+{%- elif question is of_type("MultiChoiceQuestion") and reply is of_type("MultiChoiceReply") -%}
 {{ renderChoiceList(question, reply, path, humanIdentifier) }}
 {%- endif -%}
 {%- else %}
 ❗ *This question has not been answered yet!*
-{%- endif %}
+{%- endif -%}
 {%- endmacro -%}
 {%- macro renderQuestion(question, path, humanIdentifier) -%}
 {%- set path = path ~ "." ~ question.uuid %}
 #### {{humanIdentifier}} {{question.title}}
-{{- renderTags(question.tagUuids) -}}
+{{- renderTags(question) -}}
 {{- renderQuestionExtras(question) -}}
 {%- if question.text %}
 > {{ question.text.replace("\n", "\n> ") }}
@@ -154,17 +119,16 @@
 {%- macro renderReport(report) -%}
 {%- if report.indications|length > 0 %}
 ### Summary
-{% for indication in report.indications -%}
-{%- set total = indication.answeredQuestions + indication.unansweredQuestions -%}
-{%- set percentage = 0 if total == 0 else 100 * indication.answeredQuestions / total %}
-* Answered{% if indication.indicationType == "PhasesAnsweredIndication" %} (current phase){% endif %}: **{{ indication.answeredQuestions }} / {{ total }}** ({{"%.2f"|format(percentage)}} %)
-{%- endfor -%}
-{%- endif -%}
+
+{% for item in report.indications -%}
+* Answered{% if item.is_for_phase %} (current phase){% endif %}: **{{item.answered}} / {{item.total}}** ({{"%.2f"|format(item.percentage)}} %)
+{% endfor %}
+{% endif -%}
 {%- if report.metrics|length > 0 %}
 
 ### Metrics
-{% for metric in report.metrics %}
-* {{km.entities.metrics[metric.metricUuid].title}}: {{ "%.2f"|format(metric.measure) }}
+{% for item in report.metrics %}
+* {{item.metric.title}}: {{ "%.2f"|format(item.measure) }}
 {%- endfor %}
 {% endif -%}
 {%- endmacro -%}
@@ -175,17 +139,14 @@
 > {{chapter.text.replace("\n", "\n> ")}}
 {% endif -%}
 
-{%- set chapterReports = ctx.report.chapterReports|selectattr("chapterUuid", "equalto", chapter.uuid)|list -%}
-{%- for chapterReport in chapterReports %}
+{% for chapterReport in chapter.reports %}
 {{ renderReport(chapterReport) }}
-{%- endfor %}
+{% endfor %}
 
 ### Questions
 
-{%- for questionUuid in chapter.questionUuids -%}
-{%- if questionUuid in km.entities.questions.keys() %}
-{{ renderQuestion(km.entities.questions[questionUuid], chapter.uuid, loop.index) }}
-{%- endif %}
+{% for question in chapter.questions %}
+{{ renderQuestion(question, chapter.uuid, loop.index) }}
 {%- else %}
 *No questions*
 {%- endfor %}
@@ -193,29 +154,29 @@
 {#- ------------------------------------------------------------------------------------ -#}
 {#-  INTRODUCTION                                                                        -#}
 {#- ------------------------------------------------------------------------------------ -#}
-# {{ ctx.questionnaireName }}
+# {{ dc.qtn.name }}
 
-* Organization: **{{ ctx.organization.name }}**
-{%- if ctx.createdBy %}
-* Created by: **{{ ctx.createdBy.firstName }} {{ ctx.createdBy.lastName }}** <{{ctx.createdBy.email}}>
+* Organization: **{{ dc.org.name }}**
+{%- if dc.qtn.created_by %}
+* Created by: **{{ dc.qtn.created_by.first_name }} {{ dc.qtn.created_by.last_name }}** <{{ dc.qtn.created_by.email }}>
 {%- endif %}
-* Based on: **{{ ctx.package.name }}, {{ ctx.package.version }}** (`{{ ctx.package.organizationId }}:{{ ctx.package.kmId }}:{{ ctx.package.version }}`)
-{%- for version in ctx.questionnaireVersions if version.uuid == ctx.questionnaireVersion %}
-* Version: **{{ version.name }}** ({{ version.createdAt|datetime_format("%d %b %Y %H:%M:%S") }} UTC)</td>
+* Based on: **{{ dc.pkg.name }}, {{ dc.pkg.version }}** (`{{ dc.pkg.org_id }}:{{ dc.pkg.km_id }}:{{ dc.pkg.version }}`)
+{%- for version in dc.qtn.versions if version.uuid == dc.qtn.version %}
+* Version: **{{ version.name }}** ({{ version.created_at|datetime_format("%d %b %Y %H:%M:%S") }} UTC)</td>
 {%- endfor %}
-{%- if ctx.phaseUuid %}
-* Project phase: **{{ km.entities.phases[ctx.phaseUuid].title }}**
+{%- if dc.current_phase %}
+* Project phase: **{{ dc.current_phase.title }}**
 {%- endif %}
-* Created at: **{{ ctx.createdAt|datetime_format("%d %b %Y") }}**
+* Created at: **{{ dc.doc.created_at|datetime_format("%d %b %Y") }}**
 
 ## Report
 
-{{ renderReport(ctx.report.totalReport) }}
+{{ renderReport(dc.report.total_report) }}
 
 ---
 
-{% for chapterUuid in km.chapterUuids %}
-{{ renderChapter(km.entities.chapters[chapterUuid], loop.index) }}
+{% for chapter in dc.km.chapters %}
+{{ renderChapter(chapter, loop.index) }}
 {% else %}
 *No chapters*
 {% endfor %}
