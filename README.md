@@ -10,6 +10,11 @@ This document template for DSW is available as open-source via GitHub Repository
 
 ## Changelog
 
+### 2.10.0
+
+- Adjusted to template metamodel version 12 (released in DSW 4.1.0)
+- Integrations should not have the link inside the item template (item URL will not be generated)
+
 ### 2.9.0
 
 - Switch from `wkhtmltopdf` to `weasyprint` for PDF
