@@ -46,7 +46,7 @@
       {% if reply is of_type("StringReply") %}
         <span>{{reply.value}}</span>
       {% else %}
-        <span>{{reply.value|markdown}}</span>
+        <span>{{reply.value.rsplit(" ![]")[0]|markdown}}</span>
         {% if reply.is_integration %}
           {# Integration #}
           {% set integration = question.integration %}

@@ -10,6 +10,10 @@ This document template for DSW is available as open-source via GitHub Repository
 
 ## Changelog
 
+### 2.10.1
+
+- Fix broken images in Word
+
 ### 2.10.0
 
 - Adjusted to template metamodel version 12 (released in DSW 4.1.0)
