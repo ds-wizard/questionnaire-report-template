@@ -25,13 +25,17 @@ This document template for DSW is available as open-source via GitHub Repository
 
 ## Changelog
 
+### 2.11.1
+
+- Fixed nested bullet points would display unwanted characters
+
 ### 2.11.0
 
 - Adjusted to template metamodel version 13 (released in DSW 4.3.0)
 
 ### 2.10.1
 
-- Fix broken images in Word
+- Fixed broken images in Word
 
 ### 2.10.0
 
@@ -40,17 +44,17 @@ This document template for DSW is available as open-source via GitHub Repository
 
 ### 2.9.0
 
-- Switch from `wkhtmltopdf` to `weasyprint` for PDF
-- Improve styling for PDF and HTML
+- Switched from `wkhtmltopdf` to `weasyprint` for PDF
+- Improved styling for PDF and HTML
 
 ### 2.8.0
 
 - Adjusted to template metamodel version 11 (released in DSW 3.20.0)
-- Add versions overview / change tracker table
+- Added versions overview / change tracker table
 
 ### 2.7.1
 
-- Fix Markdown rendering for integration question reply
+- Fixed Markdown rendering for integration question reply
 
 ### 2.7.0
 
@@ -82,7 +86,7 @@ This document template for DSW is available as open-source via GitHub Repository
 
 ### 2.0.0
 
-- Improve template visual
+- Improved template visual
 
 ### 1.4.0
 
@@ -94,7 +98,7 @@ This document template for DSW is available as open-source via GitHub Repository
 
 ### 1.2.1
 
-- Fix issue with multiple tags on questions
+- Fixed issue with multiple tags on questions
 
 ### 1.2.0
 
