@@ -459,3 +459,19 @@ div#versions td.no-versions {
   padding: 1em;
   text-align: center;
 }
+
+/* Resource collections and pages */
+
+.resource-collection {
+  margin-left: .5rem;
+}
+.resource-page {
+  margin-left: .5rem;
+}
+.resource-page-content {
+  margin-top: 1rem;
+  margin-bottom: 3rem;
+  background: #eee;
+  border-radius: .5rem;
+  padding: 1rem;
+}

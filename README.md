@@ -25,6 +25,12 @@ This document template for DSW is available as open-source via GitHub Repository
 
 ## Changelog
 
+### 2.12.0
+
+- Adjusted to template metamodel version 14 (released in DSW 4.10.0)
+- Added support for item select question
+- Added support for resource collections and pages (resource page references)
+
 ### 2.11.1
 
 - Fixed nested bullet points would display unwanted characters

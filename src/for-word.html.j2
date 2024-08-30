@@ -14,25 +14,54 @@
   {% endif %}
 {%- endmacro -%}
 {%- macro renderResourcePageReferences(question) -%}
-  {% set refs = question.resource_page_references %}
+  {% set refs = [] %}
+  {% for ref in question.resource_page_references %}
+    {% if ref.resource_page_uuid and ref.resource_page and ref.resource_page.collection %}
+      {% do refs.append({
+        'ref_uuid': ref.uuid,
+        'uuid': ref.resource_page_uuid,
+        'collection_title': ref.resource_page.collection.title,
+        'title': ref.resource_page.title,
+      }) %}
+    {% endif %}
+  {% endfor %}
   {% if refs|length > 0 %}
     <div>
-      📖 <b>Data Stewardship for Open Science:</b> {% for reference in refs %}<a href="{{reference.url}}" target="_blank"><i>{{reference.short_uuid}}</i></a>{% if not loop.last %}, {% endif %}{% endfor %}
+      📖 <b>Resource Pages:</b> {% for ref in refs %}<i>{{ref.collection_title}} - {{ref.title}}</i>{% if not loop.last %}, {% endif %}{% endfor %}
     </div>
   {% endif %}
 {%- endmacro -%}
 {%- macro renderURLReferences(question) -%}
-  {% set refs = question.url_references %}
+  {% set refs = [] %}
+  {% for ref in question.url_references %}
+    {% if ref.label and ref.url %}
+      {% do refs.append({
+        'uuid': ref.uuid,
+        'label': ref.label,
+        'url': ref.url,
+      }) %}
+    {% endif %}
+  {% endfor %}
   {% if refs|length > 0 %}
     <div>
-      🔗 <b>External Links:</b> {% for reference in refs %}<a href="{{reference.url}}" target="_blank"><i>{{reference.label}}</i></a>{% if not loop.last %}, {% endif %}{% endfor %}
+      🔗 <b>External Links:</b> {% for ref in refs %}<a href="{{ref.url}}" target="_blank"><i>{{ref.label}}</i></a>{% if not loop.last %}, {% endif %}{% endfor %}
     </div>
   {% endif %}
 {%- endmacro -%}
 {%- macro renderExperts(question) -%}
-  {% if question.experts|length > 0 %}
+  {% set experts = [] %}
+  {% for expert in question.experts %}
+    {% if expert.name and expert.email %}
+      {% do experts.append({
+        'uuid': expert.uuid,
+        'email': expert.email,
+        'name': expert.name,
+      }) %}
+    {% endif %}
+  {% endfor %}
+  {% if experts|length > 0 %}
     <div>
-      🙋 <b>Experts:</b> {% for expert in question.experts %}<i>{{expert.name}} (<a href="mailto:{{expert.email}}">{{expert.email}}</a>){% if not loop.last %}, {% endif %}</i>{% endfor %}
+      🙋 <b>Experts:</b> {% for expert in experts %}<i>{{expert.name}} (<a href="mailto:{{expert.email}}">{{expert.email}}</a>){% if not loop.last %}, {% endif %}</i>{% endfor %}
     </div>
   {% endif %}
 {%- endmacro -%}
@@ -106,7 +135,7 @@
     {% endfor %}
   </div>
 {%- endmacro -%}
-{%- macro renderChoiceList(question, reply, path, humanIdentifier) -%}
+{%- macro renderAnswerChoiceList(question, reply, path, humanIdentifier) -%}
   <div>
     <ul>
     {% for choice in question.choices %}
@@ -117,6 +146,11 @@
       {%- endif %}
     {% endfor %}
     </ul>
+  </div>
+{%- endmacro -%}
+{%- macro renderAnswerItemSelect(question, reply, path, humanIdentifier) -%}
+  <div>
+    <p>✔️ {{ reply.item_title }}</p>
   </div>
 {%- endmacro -%}
 {# ------------------------------------------------------------------------------------ #}
@@ -142,7 +176,9 @@
     {% elif question is of_type("IntegrationQuestion") and reply is of_type("IntegrationReply") %}
       {{ renderAnswerValue(question, reply, path, humanIdentifier) }}
     {% elif question is of_type("MultiChoiceQuestion") and reply is of_type("MultiChoiceReply") %}
-      {{ renderChoiceList(question, reply, path, humanIdentifier) }}
+      {{ renderAnswerChoiceList(question, reply, path, humanIdentifier) }}
+    {% elif question is of_type("ItemSelectQuestion") and reply is of_type("ItemSelectReply") %}
+      {{ renderAnswerItemSelect(question, reply, path, humanIdentifier) }}
     {% endif %}
   {% else %}
     <p>❗ <i>This question has not been answered yet!</i></p>
@@ -213,6 +249,20 @@
           {% endfor %}
         </section>
       </section>
+{%- endmacro -%}
+{%- macro renderResourceCollection(collection, humanIdentifier) -%}
+  <div>
+    <h3>{{ humanIdentifier }}. {{ collection.title }}</h3>
+
+    {%- for page in collection.pages -%}
+    <div>
+      <h4>{{ humanIdentifier }}.{{ loop.index }}. {{ page.title }}</h4>
+      <div>
+        {{ page.content|markdown }}
+      </div>
+    </div>
+    {%- endfor -%}
+  </div>
 {%- endmacro -%}
 {# ------------------------------------------------------------------------------------ #}
 {#  HTML LAYOUT                                                                         #}
@@ -293,6 +343,15 @@
     {% else %}
       <p><i>No chapters</i></p>
     {% endfor %}
+
+    <section>
+    {% if dc.km.resource_collections|length > 0 %}
+      <h2>Additional Resources</h2>
+    {% endif %}
+    {% for resource_collection in dc.km.resource_collections %}
+      {{ renderResourceCollection(resource_collection, (loop.index-1)|of_alphabet|upper) }}
+    {% endfor %}
+    </section>
   </div>
 {%- endmacro -%}
 {# ------------------------------------------------------------------------------------ #}

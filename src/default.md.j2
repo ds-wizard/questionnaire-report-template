@@ -11,20 +11,49 @@
 {%- endif %}
 {%- endmacro -%}
 {%- macro renderResourcePageReferences(question) -%}
-{% set refs = question.resource_page_references %}
+{% set refs = [] %}
+{% for ref in question.resource_page_references %}
+{% if ref.resource_page_uuid and ref.resource_page and ref.resource_page.collection %}
+{% do refs.append({
+    'ref_uuid': ref.uuid,
+    'uuid': ref.resource_page_uuid,
+    'collection_title': ref.resource_page.collection.title,
+    'title': ref.resource_page.title,
+}) %}
+{% endif %}
+{% endfor %}
 {% if refs|length > 0 %}
-* 📖 **Data Stewardship for Open Science:** {% for reference in refs %}[{{reference.short_uuid}}]({{reference.url}}){% if not loop.last %}, {% endif %}{% endfor %}
-{%- endif -%}
+* 📖 **Resource Pages:** {% for ref in refs %}{{ ref.collection_title }} - {{ ref.title }}{% if not loop.last %}, {% endif %}{% endfor %}
+{% endif %}
 {%- endmacro -%}
 {%- macro renderURLReferences(question) -%}
-{% set refs = question.url_references %}
+{% set refs = [] %}
+{% for ref in question.url_references %}
+{% if ref.label and ref.url %}
+{% do refs.append({
+    'uuid': ref.uuid,
+    'label': ref.label,
+    'url': ref.url,
+}) %}
+{% endif %}
+{% endfor %}
 {% if refs|length > 0 %}
 * 🔗 **External links**: {% for reference in refs %}[{{reference.label}}]({{reference.url}}){% if not loop.last %}, {% endif %}{% endfor %}
 {%- endif -%}
 {%- endmacro -%}
 {%- macro renderExperts(question) -%}
-{% if question.experts|length > 0 %}
-* 🙋 **Experts:** {% for expert in question.experts %}*{{expert.name}}* <{{expert.email}}>{% if not loop.last %}, {% endif %}{% endfor %}
+{% set experts = [] %}
+{% for expert in question.experts %}
+{% if expert.name and expert.email %}
+{% do experts.append({
+    'uuid': expert.uuid,
+    'email': expert.email,
+    'name': expert.name,
+}) %}
+{% endif %}
+{% endfor %}
+{% if experts|length > 0 %}
+* 🙋 **Experts:** {% for expert in experts %}*{{expert.name}}* <{{expert.email}}>{% if not loop.last %}, {% endif %}{% endfor %}
 {%- endif -%}
 {%- endmacro -%}
 {#- ------------------------------------------------------------------------------------ -#}
@@ -68,7 +97,7 @@
 *No answer items*
 {%- endfor -%}
 {%- endmacro -%}
-{%- macro renderChoiceList(question, reply, path, humanIdentifier) -%}
+{%- macro renderAnswerChoiceList(question, reply, path, humanIdentifier) -%}
 {%- for choice in question.choices -%}
 {%- if choice in reply.choices %}
 * ✔️ {{ choice.label }}
@@ -76,6 +105,9 @@
 * ❌ {{ choice.label }}
 {%- endif %}
 {%- endfor -%}
+{%- endmacro -%}
+{%- macro renderAnswerItemSelect(question, reply, path, humanIdentifier) -%}
+✔️ {{ reply.item_title }}
 {%- endmacro -%}
 {#- ------------------------------------------------------------------------------------ -#}
 {#-  QUESTION MACROS                                                                     -#}
@@ -97,7 +129,9 @@
 {%- elif question is of_type("IntegrationQuestion") and reply is of_type("IntegrationReply") -%}
 {{ renderAnswerValue(question, reply, path, humanIdentifier) }}
 {%- elif question is of_type("MultiChoiceQuestion") and reply is of_type("MultiChoiceReply") -%}
-{{ renderChoiceList(question, reply, path, humanIdentifier) }}
+{{ renderAnswerChoiceList(question, reply, path, humanIdentifier) }}
+{% elif question is of_type("ItemSelectQuestion") and reply is of_type("ItemSelectReply") %}
+{{ renderAnswerItemSelect(question, reply, path, humanIdentifier) }}
 {%- endif -%}
 {%- else %}
 ❗ *This question has not been answered yet!*
@@ -151,6 +185,15 @@
 *No questions*
 {%- endfor %}
 {%- endmacro -%}
+{%- macro renderResourceCollection(collection, humanIdentifier) -%}
+### {{ humanIdentifier }}. {{ collection.title }}
+
+{% for page in collection.pages %}
+#### {{ humanIdentifier }}.{{ loop.index }}. {{ page.title }}
+
+{{ page.content }}
+{% endfor %}
+{%- endmacro -%}
 {#- ------------------------------------------------------------------------------------ -#}
 {#-  INTRODUCTION                                                                        -#}
 {#- ------------------------------------------------------------------------------------ -#}
@@ -195,4 +238,13 @@ The named versions of this document:
 {{ renderChapter(chapter, loop.index) }}
 {% else %}
 *No chapters*
+{% endfor %}
+
+---
+
+{% if dc.km.resource_collections|length > 0 %}
+## Additional Resources
+{% endif %}
+{% for resource_collection in dc.km.resource_collections %}
+{{ renderResourceCollection(resource_collection, (loop.index-1)|of_alphabet|upper) }}
 {% endfor %}
