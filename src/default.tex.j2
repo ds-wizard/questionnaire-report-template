@@ -9,13 +9,13 @@
 {%- macro renderAnswerValue(question, reply, path, humanIdentifier) %}
 {%- if reply is of_type("StringReply") %}
 \begin{itemize}
-  \item[\CheckmarkBold] {{reply.value}}
+  \item[\CheckmarkBold] {{ reply.value }}
 \end{itemize}
 {% else %}
 \begin{itemize}
   \item[\CheckmarkBold] 
   \begin{markdown}
-  {{reply.value}}
+  {{ reply.value }}
   \end{markdown}
   {% if reply.is_integration -%}
   {%- set integration = question.integration -%}
@@ -81,7 +81,9 @@
 {%- endif %}
 {%- endmacro -%}
 {%- macro renderAnswerItemSelect(question, reply, path, humanIdentifier) -%}
-\item[\CheckmarkBold] {{ reply.item_title }}
+\begin{itemize}
+  \item[\CheckmarkBold] {{ reply.item_title }}
+\end{itemize}
 {%- endmacro -%}
 {#- ------------------------------------------------------------------------------------ -#}
 {#-  QUESTION REPLY MACROS                                                               -#}
@@ -90,7 +92,7 @@
   {%- set isRequired = question.is_required -%}
   {%- set reply = question.replies.get(path) -%}
   {%- if reply and reply.value -%}
-    {%- if question.questionType == "ValueQuestion" and reply.value.type == "StringReply" -%}
+    {%- if question is of_type("ValueQuestion") and reply is of_type("StringReply") -%}  {# odend8ni value.#}
       {{ renderAnswerValue(question, reply, path, humanIdentifier) }}
     {%- elif question is of_type("OptionsQuestion") and reply is of_type("AnswerReply") -%}
       {{ renderAnswerOption(question, reply, path, humanIdentifier) }}
@@ -113,7 +115,7 @@
 {#-  QUESTION EXTRAS MACRO                                                               -#}
 {#- ------------------------------------------------------------------------------------ -#}
 {%- macro renderQuestionExtras(question) -%}
-  {%- set resourcePageReferences = question.resource_page_reference -%}
+  {%- set resourcePageReferences = question.resource_page_references -%}
   {%- set urlReferences = question.url_references -%}
   {%- set tags = question.tags -%}
   {%- set experts = question.experts -%}
@@ -132,7 +134,7 @@
     \href{{ "{" }}{{ reference.url }}{{ "}" }}{{ "{" }}{{ reference.label }}{{ "}" }}
     {%- if not loop.last -%}, {% endif -%}{%- endfor -%}
   {%- endif -%}
-  {% if question.expertUuids|length > 0 %}
+  {% if experts|length > 0 %}
   \item \textit{Experts}: {% for expert in experts -%}
     {{expert.name}} $\langle$\href{{ "{" }}mailto:{{ expert.email }}{{ "}" }}{{ "{" }}{{ expert.email }}{{ "}" }}$\rangle$
     {%- if not loop.last -%}, {% endif -%}{%- endfor -%}
