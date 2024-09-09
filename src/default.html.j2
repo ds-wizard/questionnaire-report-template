@@ -305,14 +305,28 @@
   <div id="resource-collection-{{collection.uuid}}" class="resource-collection">
     <h3>{{ humanIdentifier }}. {{ collection.title }}</h3>
 
-    {%- for page in collection.pages -%}
-    <div id="resource-page-{{page.uuid}}" class="resource-page">
-      <h4>{{ humanIdentifier }}.{{ loop.index }}. {{ page.title }}</h4>
-      <div class="resource-page-content">
-        {{ page.content|markdown }}
+    {%- if collection.title == "Data Stewardship for Open Science" -%}
+
+      {%- for page in collection.pages -%}
+      <div id="resource-page-{{page.uuid}}" class="resource-page">
+        <h4>{{ humanIdentifier }}.{{ loop.index }}. {{ page.title }}</h4>
+        <div class="resource-page-content-book">
+          {{ page.content|markdown }}
+        </div>
       </div>
-    </div>
-    {%- endfor -%}
+      {%- endfor -%}
+
+    {%- else -%}
+      {%- for page in collection.pages -%}
+      <div id="resource-page-{{page.uuid}}" class="resource-page">
+        <h4>{{ humanIdentifier }}.{{ loop.index }}. {{ page.title }}</h4>
+        <div class="resource-page-content">
+          {{ page.content|markdown }}
+        </div>
+      </div>
+      {%- endfor -%}
+    {%- endif -%}
+
   </div>
 {%- endmacro -%}
 {# ------------------------------------------------------------------------------------ #}

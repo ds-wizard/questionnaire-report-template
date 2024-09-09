@@ -331,7 +331,6 @@ header .tool-info svg {
 
 
 /* Experts and references */
-
 .experts, .references {
   color: #868e96;
   line-height: 1.5;
@@ -475,3 +474,16 @@ div#versions td.no-versions {
   border-radius: .5rem;
   padding: 1rem;
 }
+.resource-page-content-book {
+  margin-top: 1rem;
+  margin-bottom: 3rem;
+  background: #eee;
+  border-radius: .5rem;
+  padding: 1rem;
+}
+.resource-page-content-book img{
+  vertical-align: middle;
+  margin-right: 0.5rem;
+  margin-left: 0.5rem;
+}
+  
