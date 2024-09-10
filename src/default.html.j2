@@ -307,9 +307,24 @@
       {%- for page in collection.pages -%}
       <div id="resource-page-{{page.uuid}}" class="resource-page">
         <h4>{{ humanIdentifier }}.{{ loop.index }}. {{ page.title }}</h4>
-        <div class="resource-page-content">
-          {{ page.content|markdown }}
-        </div>
+        {%- set bookAckString = "with kind permission of [" -%}
+        {%- if bookAckString in page.content -%}
+            {%- set part=page.content.split('---') -%}
+            {%- set descriptionPart = part[0]+'---' -%}
+            {%- set bookAckPart = part[1] -%}
+            {% set nonBreakBookAckString = bookAckString.replace(' ', '&nbsp;') %}
+            {% set bookAckFixedPart = bookAckPart.replace(bookAckString, nonBreakBookAckString) %}
+            <div class ="resource-page-content">
+              {{ descriptionPart|markdown }}
+              <div class="resource-page-content-book-ack">
+                {{ bookAckFixedPart|markdown }}
+              </div>
+            </div>
+        {%- else -%}
+          <div class="resource-page-content">
+            {{ page.content|markdown }}
+          </div>
+        {%- endif -%}
       </div>
       {%- endfor -%}
   </div>
