@@ -153,6 +153,15 @@
     <p>✔️ {{ reply.item_title }}</p>
   </div>
 {%- endmacro -%}
+{%- macro renderAnswerFile(question, reply, path, humanIdentifier) -%}
+  <div>
+  {% if reply.file %}
+    <p>✔️ <a href="{{ reply.file.download_url }}" target="_blank">{{ reply.file.name }}</a> ({{ reply.file.size|bytesize_format }})</p>
+  {% else %}
+    <p>❌ The file has been deleted</p>
+  {% endif %}
+  </div>
+{%- endmacro -%}
 {# ------------------------------------------------------------------------------------ #}
 {#  QUESTION MACROS                                                                     #}
 {# ------------------------------------------------------------------------------------ #}
@@ -179,6 +188,8 @@
       {{ renderAnswerChoiceList(question, reply, path, humanIdentifier) }}
     {% elif question is of_type("ItemSelectQuestion") and reply is of_type("ItemSelectReply") %}
       {{ renderAnswerItemSelect(question, reply, path, humanIdentifier) }}
+    {% elif question is of_type("FileQuestion") and reply is of_type("FileReply") %}
+      {{ renderAnswerFile(question, reply, path, humanIdentifier) }}
     {% endif %}
   {% else %}
     <p>❗ <i>This question has not been answered yet!</i></p>

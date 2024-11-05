@@ -28,8 +28,9 @@ This document template for DSW is available as open-source via GitHub Repository
 
 ## Changelog
 
-### Unreleased
+### 2.13.0
 
+- Adjusted to template metamodel version 15 (released in DSW 4.12.0)
 - Fixed experts
 - Improved reply to value questions
 - Improved resource pages

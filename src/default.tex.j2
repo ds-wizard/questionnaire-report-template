@@ -85,6 +85,15 @@
   \item[\CheckmarkBold] {{ reply.item_title }}
 \end{itemize}
 {%- endmacro -%}
+{%- macro renderAnswerFile(question, reply, path, humanIdentifier) -%}
+\begin{itemize}
+{% if reply.file %}
+  \item[\CheckmarkBold] \href{{ "{" }}{{ reply.file.download_url }}{{ "}" }}{{ "{" }}{{ reply.file.name }}{{ "}" }} ({{ reply.file.size|bytesize_format }})
+{% else %}
+  \item[\XSolidBrush] \textit{The file has been deleted}
+{% endif %}
+\end{itemize}
+{%- endmacro -%}
 {#- ------------------------------------------------------------------------------------ -#}
 {#-  QUESTION REPLY MACROS                                                               -#}
 {#- ------------------------------------------------------------------------------------ -#}
@@ -104,6 +113,8 @@
       {{ renderAnswerChoiceList(question, reply, path, humanIdentifier) }}
     {% elif question is of_type("ItemSelectQuestion") and reply is of_type("ItemSelectReply") %}
       {{ renderAnswerItemSelect(question, reply, path, humanIdentifier) }}
+    {% elif question is of_type("FileQuestion") and reply is of_type("FileReply") %}
+      {{ renderAnswerFile(question, reply, path, humanIdentifier) }}
     {%- endif -%}
   {% else %}
 \begin{itemize}

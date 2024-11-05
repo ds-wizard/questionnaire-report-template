@@ -109,6 +109,13 @@
 {%- macro renderAnswerItemSelect(question, reply, path, humanIdentifier) -%}
 ✔️ {{ reply.item_title }}
 {%- endmacro -%}
+{%- macro renderAnswerFile(question, reply, path, humanIdentifier) -%}
+{% if reply.file %}
+✔️ [{{ reply.file.name }}]({{ reply.file.download_url }}) ({{ reply.file.size|bytesize_format }})</p>
+{% else %}
+❌ The file has been deleted
+{% endif %}
+{%- endmacro -%}
 {#- ------------------------------------------------------------------------------------ -#}
 {#-  QUESTION MACROS                                                                     -#}
 {#- ------------------------------------------------------------------------------------ -#}
@@ -132,6 +139,8 @@
 {{ renderAnswerChoiceList(question, reply, path, humanIdentifier) }}
 {% elif question is of_type("ItemSelectQuestion") and reply is of_type("ItemSelectReply") %}
 {{ renderAnswerItemSelect(question, reply, path, humanIdentifier) }}
+{% elif question is of_type("FileQuestion") and reply is of_type("FileReply") %}
+{{ renderAnswerFile(question, reply, path, humanIdentifier) }}
 {%- endif -%}
 {%- else %}
 ❗ *This question has not been answered yet!*
