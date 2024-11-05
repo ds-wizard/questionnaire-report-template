@@ -331,7 +331,6 @@ header .tool-info svg {
 
 
 /* Experts and references */
-
 .experts, .references {
   color: #868e96;
   line-height: 1.5;
@@ -461,7 +460,6 @@ div#versions td.no-versions {
 }
 
 /* Resource collections and pages */
-
 .resource-collection {
   margin-left: .5rem;
 }
@@ -474,4 +472,17 @@ div#versions td.no-versions {
   background: #eee;
   border-radius: .5rem;
   padding: 1rem;
+}
+.resource-page-content-book-ack {
+  display: flex; /* Use flexbox for layout */
+  flex-wrap: wrap; /* Allow items to wrap onto a new line */
+  align-items: center; /* Center items vertically */
+}
+.resource-page-content img{
+  max-width: 100%;
+}
+.resource-page-content-book-ack img{
+  max-width: 100%;
+  vertical-align: middle;
+  margin-right: 0.5rem;
 }
