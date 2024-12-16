@@ -137,8 +137,9 @@
   {% endif %}
   {%- if resourcePageReferences|length > 0 %}
   \item \textit{Resource Pages}: {% for reference in resourcePageReferences -%}
+    {%- if reference.resource_page_uuid and reference.resource_page and reference.resource_page.collection -%}
     {{ reference.resource_page.collection.title }} - {{ reference.resource_page.title }}
-    {%- if not loop.last -%}, {% endif -%}{%- endfor -%}
+    {%- if not loop.last -%}, {% endif -%}{%- endif -%}{%- endfor -%}
   {%- endif -%}
   {%- if urlReferences|length > 0 %}
   \item \textit{External Links}: {% for reference in urlReferences -%}

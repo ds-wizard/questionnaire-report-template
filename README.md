@@ -28,6 +28,10 @@ This document template for DSW is available as open-source via GitHub Repository
 
 ## Changelog
 
+### 2.14.1
+
+- Fixed LaTeX rendering with references
+
 ### 2.14.0
 
 - Adjusted to template metamodel version 16 (released in DSW 4.13.0)
