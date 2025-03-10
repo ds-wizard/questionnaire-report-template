@@ -28,6 +28,11 @@ This document template for DSW is available as open-source via GitHub Repository
 
 ## Changelog
 
+### 2.14.2
+
+- Remove External Resources
+- Improve URL in LaTeX
+
 ### 2.14.1
 
 - Fixed LaTeX rendering with references
