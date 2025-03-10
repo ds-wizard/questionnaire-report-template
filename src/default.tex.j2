@@ -132,14 +132,22 @@
 {#-  QUESTION EXTRAS MACRO                                                               -#}
 {#- ------------------------------------------------------------------------------------ -#}
 {%- macro renderQuestionExtras(question) -%}
+  {%- set resourcePageReferences = question.resource_page_references -%}
   {%- set urlReferences = question.url_references -%}
   {%- set tags = question.tags -%}
   {%- set experts = question.experts -%}
- {%- if urlReferences|length > 0 or tags|length > 0 or experts|length > 0 %}
+  {%- if resourcePageReferences|length > 0 or urlReferences|length > 0 or tags|length > 0 or experts|length > 0 %}
 \begin{itemize}
   {%- if tags|length > 0 %}
   \item \textit{Tags}: {% for tag in tags %}{% set color = tag.color[1:] if tag.color[0] == "#" else tag.color %}\setulcolor{{ "{" }}{{color}}{{ "}" }}\ul{{ "{" }}{{tag.name}}{{ "}" }}{% if not loop.last%}, {% endif %}{% endfor %}
   {% endif %}
+  {%- if resourcePageReferences|length > 0 %}
+  \item \textit{Resource Pages}: {% for reference in resourcePageReferences -%}
+  {%- if reference.resource_page_uuid and reference.resource_page and reference.resource_page.collection -%}
+    {%- set resourcePageLink = ctx.config.clientUrl ~ '/knowledge-models/' ~ dc.package.id ~ '/resource-pages/' ~ reference.resource_page.uuid -%}
+    \href{{ "{" }}{{ resourcePageLink }}{{ "}" }}{{ "{" }}{{ reference.resource_page.collection.title }} - {{ reference.resource_page.title }}{{ "}" }}
+    {%- if not loop.last -%}, {% endif -%}{%- endif -%}{%- endfor -%}
+  {%- endif -%}
   {%- if urlReferences|length > 0 %}
   \item \textit{External Links}: {% for reference in urlReferences -%}
     \href{{ "{" }}{{ reference.url }}{{ "}" }}{{ "{" }}{{ reference.label }}{{ "}" }}
