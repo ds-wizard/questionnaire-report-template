@@ -23,7 +23,7 @@
 {% endif %}
 {% endfor %}
 {% if refs|length > 0 %}
-* 📖 **Resource Pages:** {% for ref in refs %}{{ ref.collection_title }} - {{ ref.title }}{% if not loop.last %}, {% endif %}{% endfor %}
+* 📖 **Resource Pages:** {% for ref in refs %}{%- set resourcePageLink = dc.config.client_url ~ '/knowledge-models/' ~ dc.package.id ~ '/resource-pages/' ~ ref.uuid -%}[{{ ref.collection_title }} - {{ ref.title }}]({{resourcePageLink}}){% if not loop.last %}, {% endif %}{% endfor %}
 {% endif %}
 {%- endmacro -%}
 {%- macro renderURLReferences(question) -%}
@@ -194,15 +194,6 @@
 *No questions*
 {%- endfor %}
 {%- endmacro -%}
-{%- macro renderResourceCollection(collection, humanIdentifier) -%}
-### {{ humanIdentifier }}. {{ collection.title }}
-
-{% for page in collection.pages %}
-#### {{ humanIdentifier }}.{{ loop.index }}. {{ page.title }}
-
-{{ page.content }}
-{% endfor %}
-{%- endmacro -%}
 {#- ------------------------------------------------------------------------------------ -#}
 {#-  INTRODUCTION                                                                        -#}
 {#- ------------------------------------------------------------------------------------ -#}
@@ -249,11 +240,3 @@ The named versions of this document:
 *No chapters*
 {% endfor %}
 
----
-
-{% if dc.km.resource_collections|length > 0 %}
-## Additional Resources
-{% endif %}
-{% for resource_collection in dc.km.resource_collections %}
-{{ renderResourceCollection(resource_collection, (loop.index-1)|of_alphabet|upper) }}
-{% endfor %}

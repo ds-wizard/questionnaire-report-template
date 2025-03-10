@@ -4,7 +4,7 @@
 {# ------------------------------------------------------------------------------------ #}
 {%- set dc = ctx|to_context_obj -%}
 {# ------------------------------------------------------------------------------------ #}
-{#  TAGS, REFERNCES, and EXPERTS MACROS                                                 #}
+{#  TAGS, REFERENCES, and EXPERTS MACROS                                                 #}
 {# ------------------------------------------------------------------------------------ #}
 {%- macro renderTags(question) -%}
   {% if question.tags|length > 0 %}
@@ -27,7 +27,7 @@
   {% endfor %}
   {% if refs|length > 0 %}
     <div>
-      📖 <b>Resource Pages:</b> {% for ref in refs %}<i>{{ref.collection_title}} - {{ref.title}}</i>{% if not loop.last %}, {% endif %}{% endfor %}
+      📖 <b>Resource Pages:</b> {% for ref in refs %}{%- set resourcePageLink = dc.config.client_url ~ '/knowledge-models/' ~ dc.package.id ~ '/resource-pages/' ~ ref.uuid -%}<a id="{{ref.ref_uuid}}" class="reference resourcepage-link" href="{{ resourcePageLink }}"><i>{{ ref.collection_title }} - {{ ref.title }}</i></a>{% if not loop.last %}, {% endif %}{% endfor %}
     </div>
   {% endif %}
 {%- endmacro -%}
@@ -261,20 +261,6 @@
         </section>
       </section>
 {%- endmacro -%}
-{%- macro renderResourceCollection(collection, humanIdentifier) -%}
-  <div>
-    <h3>{{ humanIdentifier }}. {{ collection.title }}</h3>
-
-    {%- for page in collection.pages -%}
-    <div>
-      <h4>{{ humanIdentifier }}.{{ loop.index }}. {{ page.title }}</h4>
-      <div>
-        {{ page.content|markdown }}
-      </div>
-    </div>
-    {%- endfor -%}
-  </div>
-{%- endmacro -%}
 {# ------------------------------------------------------------------------------------ #}
 {#  HTML LAYOUT                                                                         #}
 {# ------------------------------------------------------------------------------------ #}
@@ -355,14 +341,6 @@
       <p><i>No chapters</i></p>
     {% endfor %}
 
-    <section>
-    {% if dc.km.resource_collections|length > 0 %}
-      <h2>Additional Resources</h2>
-    {% endif %}
-    {% for resource_collection in dc.km.resource_collections %}
-      {{ renderResourceCollection(resource_collection, (loop.index-1)|of_alphabet|upper) }}
-    {% endfor %}
-    </section>
   </div>
 {%- endmacro -%}
 {# ------------------------------------------------------------------------------------ #}
