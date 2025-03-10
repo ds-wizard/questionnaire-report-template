@@ -4,12 +4,30 @@
 {# ------------------------------------------------------------------------------------ #}
 {%- set dc = ctx|to_context_obj -%}
 {# ------------------------------------------------------------------------------------ #}
-{#  TAGS and EXPERTS MACROS                                                 #}
+{#  TAGS, REFERENCES, and EXPERTS MACROS                                                 #}
 {# ------------------------------------------------------------------------------------ #}
 {%- macro renderTags(question) -%}
   {% if question.tags|length > 0 %}
     <div>
       🏷️ <b>Tags:</b> {% for tag in question.tags %}<i>{{tag.name}}</i>{% if not loop.last %}, {% endif %}{% endfor %}
+    </div>
+  {% endif %}
+{%- endmacro -%}
+{%- macro renderResourcePageReferences(question) -%}
+  {% set refs = [] %}
+  {% for ref in question.resource_page_references %}
+    {% if ref.resource_page_uuid and ref.resource_page and ref.resource_page.collection %}
+      {% do refs.append({
+        'ref_uuid': ref.uuid,
+        'uuid': ref.resource_page_uuid,
+        'collection_title': ref.resource_page.collection.title,
+        'title': ref.resource_page.title,
+      }) %}
+    {% endif %}
+  {% endfor %}
+  {% if refs|length > 0 %}
+    <div>
+      📖 <b>Resource Pages:</b> {% for ref in refs %}{%- set resourcePageLink = ctx.config.clientUrl ~ '/knowledge-models/' ~ dc.package.id ~ '/resource-pages/' ~ ref.uuid -%}<a id="{{ref.ref_uuid}}" class="reference resourcepage-link" href="{{ resourcePageLink }}"><i>{{ ref.collection_title }} - {{ ref.title }}</i></a>{% if not loop.last %}, {% endif %}{% endfor %}
     </div>
   {% endif %}
 {%- endmacro -%}
@@ -149,6 +167,7 @@
 {# ------------------------------------------------------------------------------------ #}
 {%- macro renderQuestionExtras(question) -%}
   <div>
+    {{ renderResourcePageReferences(question) }}
     {{ renderURLReferences(question) }}
     {{ renderExperts(question) }}
   </div>
