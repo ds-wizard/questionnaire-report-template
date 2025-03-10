@@ -10,22 +10,6 @@
 * 🏷️ **Tags:** {% for tag in question.tags %}*{{tag.name}}*{% if not loop.last %}, {% endif %}{% endfor %}
 {%- endif %}
 {%- endmacro -%}
-{# {%- macro renderResourcePageReferences(question) -%}
-{% set refs = [] %}
-{% for ref in question.resource_page_references %}
-{% if ref.resource_page_uuid and ref.resource_page and ref.resource_page.collection %}
-{% do refs.append({
-    'ref_uuid': ref.uuid,
-    'uuid': ref.resource_page_uuid,
-    'collection_title': ref.resource_page.collection.title,
-    'title': ref.resource_page.title,
-}) %}
-{% endif %}
-{% endfor %}
-{% if refs|length > 0 %}
-* 📖 **Resource Pages:** {% for ref in refs %}{{ ref.collection_title }} - {{ ref.title }}{% if not loop.last %}, {% endif %}{% endfor %}
-{% endif %}
-{%- endmacro -%} #}
 {%- macro renderURLReferences(question) -%}
 {% set refs = [] %}
 {% for ref in question.url_references %}
@@ -120,7 +104,6 @@
 {#-  QUESTION MACROS                                                                     -#}
 {#- ------------------------------------------------------------------------------------ -#}
 {%- macro renderQuestionExtras(question) -%}
-{# {{- renderResourcePageReferences(question) -}} #}
 {{- renderURLReferences(question) -}}
 {{- renderExperts(question) -}}
 {%- endmacro -%}
@@ -194,15 +177,6 @@
 *No questions*
 {%- endfor %}
 {%- endmacro -%}
-{# {%- macro renderResourceCollection(collection, humanIdentifier) -%}
-### {{ humanIdentifier }}. {{ collection.title }}
-
-{% for page in collection.pages %}
-#### {{ humanIdentifier }}.{{ loop.index }}. {{ page.title }}
-
-{{ page.content }}
-{% endfor %}
-{%- endmacro -%} #}
 {#- ------------------------------------------------------------------------------------ -#}
 {#-  INTRODUCTION                                                                        -#}
 {#- ------------------------------------------------------------------------------------ -#}
@@ -249,11 +223,3 @@ The named versions of this document:
 *No chapters*
 {% endfor %}
 
-{# ---
-
-{% if dc.km.resource_collections|length > 0 %}
-## Additional Resources
-{% endif %}
-{% for resource_collection in dc.km.resource_collections %}
-{{ renderResourceCollection(resource_collection, (loop.index-1)|of_alphabet|upper) }}
-{% endfor %} #}

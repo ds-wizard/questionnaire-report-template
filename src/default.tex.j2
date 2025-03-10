@@ -229,18 +229,6 @@
 \end{table}
 {% endif %}
 {%- endmacro -%}
-{%- macro renderResourceCollection(collection, humanIdentifier) -%}
-\section*{{ "{" }}{{ humanIdentifier }}. {{ collection.title }}{{ "}" }}
-
-{%- for page in collection.pages -%}
-\subsection*{{ "{" }}{{ humanIdentifier }}.{{ loop.index }}. {{ page.title }}{{ "}" }}
-
-\begin{markdown}
-{{ page.content }}
-\end{markdown}
-
-{%- endfor -%}
-{%- endmacro -%}
 {#- ------------------------------------------------------------------------------------ -#}
 {#-  INTRODUCTION                                                                        -#}
 {#- ------------------------------------------------------------------------------------ -#}
