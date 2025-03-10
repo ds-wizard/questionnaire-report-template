@@ -144,7 +144,7 @@
   {%- if resourcePageReferences|length > 0 %}
   \item \textit{Resource Pages}: {% for reference in resourcePageReferences -%}
   {%- if reference.resource_page_uuid and reference.resource_page and reference.resource_page.collection -%}
-    {%- set resourcePageLink = ctx.config.clientUrl ~ '/knowledge-models/' ~ dc.package.id ~ '/resource-pages/' ~ reference.resource_page.uuid -%}
+    {%- set resourcePageLink = dc.config.client_url ~ '/knowledge-models/' ~ dc.package.id ~ '/resource-pages/' ~ reference.resource_page.uuid -%}
     \href{{ "{" }}{{ resourcePageLink }}{{ "}" }}{{ "{" }}{{ reference.resource_page.collection.title }} - {{ reference.resource_page.title }}{{ "}" }}
     {%- if not loop.last -%}, {% endif -%}{%- endif -%}{%- endfor -%}
   {%- endif -%}

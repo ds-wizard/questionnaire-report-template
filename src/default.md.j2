@@ -23,7 +23,7 @@
 {% endif %}
 {% endfor %}
 {% if refs|length > 0 %}
-* 📖 **Resource Pages:** {% for ref in refs %}{%- set resourcePageLink = ctx.config.clientUrl ~ '/knowledge-models/' ~ dc.package.id ~ '/resource-pages/' ~ ref.uuid -%}[{{ ref.collection_title }} - {{ ref.title }}]({{resourcePageLink}}){% if not loop.last %}, {% endif %}{% endfor %}
+* 📖 **Resource Pages:** {% for ref in refs %}{%- set resourcePageLink = dc.config.client_url ~ '/knowledge-models/' ~ dc.package.id ~ '/resource-pages/' ~ ref.uuid -%}[{{ ref.collection_title }} - {{ ref.title }}]({{resourcePageLink}}){% if not loop.last %}, {% endif %}{% endfor %}
 {% endif %}
 {%- endmacro -%}
 {%- macro renderURLReferences(question) -%}
