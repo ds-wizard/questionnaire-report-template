@@ -5,8 +5,31 @@
 {%- set dc = ctx|to_context_obj -%}
 {%- import "src/globals.j2" as globals with context -%}
 {# ------------------------------------------------------------------------------------ #}
-{#  TAGS and EXPERTS MACROS                                                 #}
+{#  TAGS, REFERENCES, and EXPERTS MACROS                                                 #}
 {# ------------------------------------------------------------------------------------ #}
+{%- macro renderResourcePageReferences(question) -%}
+  {% set refs = [] %}
+  {% for ref in question.resource_page_references %}
+    {% if ref.resource_page_uuid and ref.resource_page and ref.resource_page.collection %}
+      {% do refs.append({
+        'ref_uuid': ref.uuid,
+        'uuid': ref.resource_page_uuid,
+        'collection_title': ref.resource_page.collection.title,
+        'title': ref.resource_page.title,
+      }) %}
+    {% endif %}
+  {% endfor %}
+  {% if refs|length > 0 %}
+    <div class="references references-resourcepage">
+      <svg aria-hidden="true" data-prefix="fas" data-icon="book" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512" class="svg-inline--fa fa-book fa-w-14 fa-2x"><path fill="currentColor" d="M448 360V24c0-13.3-10.7-24-24-24H96C43 0 0 43 0 96v320c0 53 43 96 96 96h328c13.3 0 24-10.7 24-24v-16c0-7.5-3.5-14.3-8.9-18.7-4.2-15.4-4.2-59.3 0-74.7 5.4-4.3 8.9-11.1 8.9-18.6zM128 134c0-3.3 2.7-6 6-6h212c3.3 0 6 2.7 6 6v20c0 3.3-2.7 6-6 6H134c-3.3 0-6-2.7-6-6v-20zm0 64c0-3.3 2.7-6 6-6h212c3.3 0 6 2.7 6 6v20c0 3.3-2.7 6-6 6H134c-3.3 0-6-2.7-6-6v-20zm253.4 250H96c-17.7 0-32-14.3-32-32 0-17.6 14.4-32 32-32h285.4c-1.9 17.1-1.9 46.9 0 64z" class=""></path></svg>
+      <span><b>Resource Pages:</b></span>
+      {% for ref in refs %}
+        {%- set resourcePageLink = ctx.config.clientUrl ~ '/knowledge-models/' ~ dc.package.id ~ '/resource-pages/' ~ ref.uuid -%}
+        <a id="{{ref.ref_uuid}}" class="reference resourcepage-link" href="{{ resourcePageLink }}"><i>{{ ref.collection_title }} - {{ ref.title }}</i></a>
+      {% endfor %}
+    </div>
+  {% endif %}
+{%- endmacro -%}
 {%- macro renderURLReferences(question) -%}
   {% set refs = [] %}
   {% for ref in question.url_references %}
@@ -163,6 +186,8 @@
 {%- endmacro -%}
 {%- macro renderQuestionExtras(question) -%}
   <div class="extra-data">
+    {# Question - References - Resource Page References #}
+    {{ renderResourcePageReferences(question) }}
     {# Question - References - URL References #}
     {{ renderURLReferences(question) }}
     {# Question - Experts #}
