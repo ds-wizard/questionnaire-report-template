@@ -61,7 +61,7 @@
 {#- ------------------------------------------------------------------------------------ -#}
 {%- macro renderAnswerValue(question, reply, path, humanIdentifier) -%}
 ✔️ {{reply.value}}
-{%- if reply.is_integration %}{% set integration = question.integration -%}
+{%- if reply.is_legacy_integration %}{% set integration = question.integration -%}
  ({{integration.name}}: [{{reply.item_id}}]({{integration.item(reply.item_id)}}})){%- endif -%}
 {%- endmacro -%}
 {%- macro renderAnswerOption(question, reply, path, humanIdentifier) -%}

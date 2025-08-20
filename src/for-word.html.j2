@@ -76,7 +76,7 @@
         <span>{{reply.value}}</span>
       {% else %}
         <span>{{reply.value.rsplit(" ![]")[0]|markdown}}</span>
-        {% if reply.is_integration %}
+        {% if reply.is_legacy_integration %}
           {# Integration #}
           {% set integration = question.integration %}
           <span>

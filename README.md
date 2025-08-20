@@ -28,6 +28,10 @@ This document template for DSW is available as open-source via GitHub Repository
 
 ## Changelog
 
+### 2.16.0
+
+- Adjusted to template metamodel version 17.0 (released in DSW 4.22.0)
+
 ### 2.15.0
 
 - Remove External Resource Pages listing

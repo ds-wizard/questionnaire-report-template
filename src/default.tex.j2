@@ -23,7 +23,7 @@
   \begin{markdown}
   {{ reply.value.split("![]", 1)[0] }}
   \end{markdown}
-  {% if reply.is_integration -%}
+  {% if reply.is_legacy_integration -%}
   {%- set integration = question.integration %}
   \href{{ "{" }}{{ integration.item(reply.item_id) }}{{ "}" }}{{ "{" }}({{ integration.name }}: {{ reply.item_id }}){{ "}" }}
   {% endif %}
