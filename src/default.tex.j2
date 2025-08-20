@@ -62,12 +62,12 @@
 \end{itemize}
 {%- for i in reply.items -%}
 {%- set itemPath = itemPathPrefix ~ i -%}
-{%- set itemHumanIdenfifier = hiPrefix ~ (loop.index - 1)|of_alphabet -%}
+{%- set itemHumanIdentifier = hiPrefix ~ (loop.index - 1)|of_alphabet -%}
 % Answer item: {{itemPath}}
 
 {%- for question in question.followups -%}
   {%- set x = loop.index -%}
-{{ renderQuestion(question, itemPath, itemHumanIdenfifier ~ "." ~ x, False) }}
+{{ renderQuestion(question, itemPath, itemHumanIdentifier ~ "." ~ x, False) }}
 {% else -%}
   \textit{No follow up questions}
 {% endfor %}
@@ -190,7 +190,7 @@
 {#- ------------------------------------------------------------------------------------ -#}
 {#-  REPORT MACROS                                                                       -#}
 {#- ------------------------------------------------------------------------------------ -#}
-{%- macro progresBar(value) -%}
+{%- macro progressBar(value) -%}
 {%- set color = "colorBarAwful" -%}
 {%- if value > 0.95 -%}
   {%- set color = "colorBarAwesome" -%}
@@ -210,13 +210,13 @@
   \centering
   \begin{tabular}{ l c r }
 {%- for item in report.indications %}
-    Answered {% if item.is_for_phase %}(current phase){% endif %} & {{item.answered}} / {{item.total}} & {{ progresBar(item.percentage) }} \\
+    Answered {% if item.is_for_phase %}(current phase){% endif %} & {{item.answered}} / {{item.total}} & {{ progressBar(item.percentage) }} \\
 {%- endfor %}
     & & \\ \hline
     & & \\
 {%- if report.metrics|length > 0 %}
 {%- for item in report.metrics %}
-    {{item.metric.title}} & {{ "%.2f"|format(item.measure) }} & {{ progresBar(item.measure) }} \\
+    {{item.metric.title}} & {{ "%.2f"|format(item.measure) }} & {{ progressBar(item.measure) }} \\
 {%- endfor -%}
 {%- endif %}
   \end{tabular}

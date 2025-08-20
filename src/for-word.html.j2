@@ -119,12 +119,12 @@
     {% set hiPrefix = humanIdentifier ~ "." %}
     {% for i in reply.items %}
       {% set itemPath = itemPathPrefix ~ i %}
-      {% set itemHumanIdenfifier = hiPrefix ~ (loop.index - 1)|of_alphabet %}
+      {% set itemHumanIdentifier = hiPrefix ~ (loop.index - 1)|of_alphabet %}
       <div class="answer-item" id="{{itemPath}}">
         <div class="followups">
           {% for question in question.followups %}
             {% set x = loop.index %}
-            {{ renderQuestion(question, itemPath, itemHumanIdenfifier ~ "." ~ x) }}
+            {{ renderQuestion(question, itemPath, itemHumanIdentifier ~ "." ~ x) }}
           {% else %}
             <i>No follow up questions</i>
           {% endfor %}
