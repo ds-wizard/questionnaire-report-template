@@ -236,18 +236,18 @@ header .tool-info svg {
 
 .chapter {
   page-break-before: always;
-  margin-bottom: 5rem;
+  margin-bottom: 0.5rem;
 }
 
 
 /* Question */
 
 .question:not(:last-child) {
-  padding-bottom: 3rem;
+  padding-bottom: 0.5rem;
 }
 
 .answer-item:not(:last-child) {
-  margin-bottom: 3rem;
+  margin-bottom: 0.5rem;
 }
 
 .question, .answer-item {
