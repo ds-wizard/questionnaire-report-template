@@ -20,7 +20,7 @@
 {% endif %}
 {% endfor %}
 {% if refs|length > 0 %}
-* 📖 **Resource Pages:** {% for ref in refs %}{{ ref.collection_title }} - {{ ref.title }}{% if not loop.last %}, {% endif %}{% endfor %}
+* 📖 **Resource Pages:** {% for ref in refs %}{%- set resourcePageLink = dc.config.client_url ~ '/knowledge-models/' ~ dc.pkg.id ~ '/resource-pages/' ~ ref.uuid -%}[{{ ref.collection_title }} - {{ ref.title }}]({{resourcePageLink}}){% if not loop.last %}, {% endif %}{% endfor %}
 {% endif %}
 {%- endmacro -%}
 {%- macro renderURLReferences(question) -%}
@@ -56,10 +56,11 @@
 {#- ------------------------------------------------------------------------------------ -#}
 {#-  ANSWERS MACROS                                                                      -#}
 {#- ------------------------------------------------------------------------------------ -#}
-{%- macro renderAnswerValue(question, reply, path, humanIdentifier) -%}
-✔️ {{reply.value}}
-{%- if reply.is_legacy_integration %}{% set integration = question.integration -%}
- ({{integration.name}}: [{{reply.item_id}}]({{integration.item(reply.item_id)}}})){%- endif -%}
+{%- macro renderStringValue(question, reply, path, humanIdentifier) -%}
+✔️ {{reply.markdown_plain}}
+{%- endmacro -%}
+{%- macro renderIntegrationValue(question, reply, path, humanIdentifier) -%}
+✔️ {{reply.value.value}}
 {%- endmacro -%}
 {%- macro renderAnswerOption(question, reply, path, humanIdentifier) -%}
 {% set hi = question.answers.index(reply.answer) %}
@@ -125,13 +126,13 @@
 {%- set reply = question.replies.get(path) -%}
 {%- if reply and reply.value -%}
 {%- if question is of_type("ValueQuestion") and reply is of_type("StringReply") -%}
-{{ renderAnswerValue(question, reply, path, humanIdentifier) }}
+{{ renderStringValue(question, reply, path, humanIdentifier) }}
 {%- elif question is of_type("OptionsQuestion") and reply is of_type("AnswerReply") -%}
 {{ renderAnswerOption(question, reply, path, humanIdentifier) }}
 {%- elif question is of_type("ListQuestion") and reply is of_type("ItemListReply") -%}
 {{ renderAnswerList(question, reply, path, humanIdentifier) }}
 {%- elif question is of_type("IntegrationQuestion") and reply is of_type("IntegrationReply") -%}
-{{ renderAnswerValue(question, reply, path, humanIdentifier) }}
+{{ renderIntegrationValue(question, reply, path, humanIdentifier) }}
 {%- elif question is of_type("MultiChoiceQuestion") and reply is of_type("MultiChoiceReply") -%}
 {{ renderAnswerChoiceList(question, reply, path, humanIdentifier) }}
 {% elif question is of_type("ItemSelectQuestion") and reply is of_type("ItemSelectReply") %}
@@ -194,24 +195,24 @@
 {#- ------------------------------------------------------------------------------------ -#}
 {#-  INTRODUCTION                                                                        -#}
 {#- ------------------------------------------------------------------------------------ -#}
-# {{ dc.qtn.name }}
+# {{ dc.project.name }}
 
 * Organization: **{{ dc.org.name }}**
-{%- if dc.qtn.created_by %}
-* Created by: **{{ dc.qtn.created_by.first_name }} {{ dc.qtn.created_by.last_name }}** <{{ dc.qtn.created_by.email }}>
+{%- if dc.project.created_by %}
+* Created by: **{{ dc.project.created_by.first_name }} {{ dc.project.created_by.last_name }}** <{{ dc.project.created_by.email }}>
 {%- endif %}
 * Based on: **{{ dc.pkg.name }}, {{ dc.pkg.version }}** (`{{ dc.pkg.org_id }}:{{ dc.pkg.km_id }}:{{ dc.pkg.version }}`)
-{%- for version in dc.qtn.versions if version.uuid == dc.qtn.version %}
+{%- for version in dc.project.versions if version.uuid == dc.project.version %}
 * Version: **{{ version.name }}** ({{ version.created_at|datetime_format("%d %b %Y %H:%M:%S") }} UTC)
 {%- endfor %}
 {%- if dc.current_phase %}
 * Project phase: **{{ dc.current_phase.title }}**
 {%- endif %}
-{%- if dc.qtn.project_tags|length > 0 %}
-* Project tags: {% for tag in dc.qtn.project_tags %}**{{ tag }}**{% if not loop.last %}, {% endif %}{% endfor %}
+{%- if dc.project.project_tags|length > 0 %}
+* Project tags: {% for tag in dc.project.project_tags %}**{{ tag }}**{% if not loop.last %}, {% endif %}{% endfor %}
 {%- endif %}
-{%- if dc.qtn.description %}
-* Description: **{{ dc.qtn.description }}**
+{%- if dc.project.description %}
+* Description: **{{ dc.project.description }}**
 {%- endif %}
 * Created at: **{{ dc.doc.created_at|datetime_format("%d %b %Y") }}**
 
@@ -219,12 +220,12 @@
 
 {{ renderReport(dc.report.total_report) }}
 
-{% if dc.qtn.versions|length > 0 %}
+{% if dc.project.versions|length > 0 %}
 ## History of Versions
 
 The named versions of this document:
 
-{%- for version in dc.qtn.versions|reverse %}
+{%- for version in dc.project.versions|reverse %}
 * **{{ version.name }}** ({{ version.created_at|datetime_format("%d %b %Y") }}): {{ version.description }}
 {%- endfor %}
 {%- endif %}

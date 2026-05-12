@@ -7,9 +7,15 @@
 {#- ------------------------------------------------------------------------------------ -#}
 {%- macro renderAnswerValue(question, reply, path, humanIdentifier) %}
 {%- if reply is of_type("StringReply") %}
-\begin{itemize}
-  \item[\CheckmarkBold] {{ reply.value }}
-\end{itemize}
+  {%- if question.value_type == "UrlQuestionValueType" %}
+    \begin{itemize}
+      \item[\CheckmarkBold] \url{ {{ reply.value }} }
+    \end{itemize}
+  {%- else %}
+    \begin{itemize}
+      \item[\CheckmarkBold] {{ reply.markdown_plain }}
+    \end{itemize}
+  {%- endif %}
 {% else %}
 \begin{itemize}
   \item[\CheckmarkBold] 
@@ -136,8 +142,9 @@
   {% endif %}
   {%- if resourcePageReferences|length > 0 %}
   \item \textit{Resource Pages}: {% for reference in resourcePageReferences -%}
-    {%- if reference.resource_page_uuid and reference.resource_page and reference.resource_page.collection -%}
-    {{ reference.resource_page.collection.title }} - {{ reference.resource_page.title }}
+  {%- if reference.resource_page_uuid and reference.resource_page and reference.resource_page.collection -%}
+    {%- set resourcePageLink = dc.config.client_url ~ '/knowledge-models/' ~ dc.pkg.id ~ '/resource-pages/' ~ reference.resource_page.uuid -%}
+    \href{{ "{" }}{{ resourcePageLink }}{{ "}" }}{{ "{" }}{{ reference.resource_page.collection.title }} - {{ reference.resource_page.title }}{{ "}" }}
     {%- if not loop.last -%}, {% endif -%}{%- endif -%}{%- endfor -%}
   {%- endif -%}
   {%- if urlReferences|length > 0 %}
@@ -209,15 +216,15 @@
 \end{table}
 {%- endmacro -%}
 {%- macro renderVersions() -%}
-{% if dc.qtn.versions|length > 0 %}
+{% if dc.project.versions|length > 0 %}
 \section*{History of Versions}
 
 \begin{table}[h]
-  \centering
-  \begin{tabular}{ c c p{0.6\linewidth} }
-    Version & Date & Description \\ \hline\hline\Tstrut
-{%- for version in dc.qtn.versions|reverse %}
-    {{ version.name }}  & {{ version.created_at|datetime_format("%d %b %Y") }} & {{ version.description }} \\ \hline\Tstrut
+	\centering
+	\begin{tabular}{ c c p{0.6\linewidth} }
+		Version & Date & Description \\ \hline\hline\Tstrut
+{%- for version in dc.project.versions|reverse %}
+		{{ version.name }}  & {{ version.created_at|datetime_format("%d %b %Y") }} & {{ version.description }} \\ \hline\Tstrut
 {%- endfor %}
   \end{tabular}
 \end{table}
@@ -278,7 +285,7 @@
         \vspace*{1cm}
             
         \Huge
-        \textbf{{ "{" }}{{dc.qtn.name}}{{ "}" }}
+        \textbf{{ "{" }}{{dc.project.name}}{{ "}" }}
             
         \vspace{0.5cm}
         \LARGE
@@ -286,10 +293,10 @@
             
         \vspace{1.5cm}
             
-{%- if dc.qtn.created_by %}
+{%- if dc.project.created_by %}
         \Large
-        \textbf{{ "{" }}{{dc.qtn.created_by.first_name}} {{dc.qtn.created_by.last_name}}{{ "}" }}\\
-        {{dc.qtn.created_by.email}}
+        \textbf{{ "{" }}{{dc.project.created_by.first_name}} {{dc.project.created_by.last_name}}{{ "}" }}\\
+        {{dc.project.created_by.email}}
 {%- endif %}
         \vspace{1.5cm}
 
@@ -297,17 +304,17 @@
         Based on\\
         {{dc.pkg.name}}, {{dc.pkg.version}}\\
         \texttt{{"{"}}{{dc.pkg.org_id}}:{{dc.pkg.km_id}}:{{dc.pkg.version}}{{"}"}}\\
-        {%- for version in dc.qtn.versions if version.uuid == dc.qtn.version %}
+        {%- for version in dc.project.versions if version.uuid == dc.project.version %}
         \vspace{0.5cm}
         Version: {{ version.name }} ({{ version.created_at|datetime_format("%d %b %Y %H:%M:%S") }} UTC)\\
         {%- endfor %}
         {%- if dc.current_phase %}
         \vspace{0.5cm}
         Project phase: {{dc.current_phase.title}}\\
-        {%- endif %}}
-        {%- if dc.qtn.description %}
+        {%- endif %}
+        {%- if dc.project.description %}
         \vspace{0.25cm}
-        Description: {{ dc.qtn.description }}\\
+        Description: {{ dc.project.description }}\\
         {%- endif %}
             
         \vfill

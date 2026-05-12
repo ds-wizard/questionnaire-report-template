@@ -22,7 +22,7 @@
   {% endfor %}
   {% if refs|length > 0 %}
     <div>
-      📖 <b>Resource Pages:</b> {% for ref in refs %}<i>{{ref.collection_title}} - {{ref.title}}</i>{% if not loop.last %}, {% endif %}{% endfor %}
+      📖 <b>Resource Pages:</b> {% for ref in refs %}{%- set resourcePageLink = dc.config.client_url ~ '/knowledge-models/' ~ dc.pkg.id ~ '/resource-pages/' ~ ref.uuid -%}<a id="{{ref.ref_uuid}}" class="reference resourcepage-link" href="{{ resourcePageLink }}"><i>{{ ref.collection_title }} - {{ ref.title }}</i></a>{% if not loop.last %}, {% endif %}{% endfor %}
     </div>
   {% endif %}
 {%- endmacro -%}
@@ -68,7 +68,7 @@
     <p>
       ✔️
       {% if reply is of_type("StringReply") %}
-        <span>{{reply.value}}</span>
+        <span>{{reply.markdown_plain}}</span>
       {% else %}
         <span>{{reply.value.rsplit(" ![]")[0]|markdown}}</span>
         {% if reply.is_legacy_integration %}
@@ -263,17 +263,17 @@
       <th>Organization</th>
       <td>{{dc.org.name}}</td>
     </tr>
-    {% if dc.qtn.created_by %}
+    {% if dc.project.created_by %}
     <tr>
       <th>Created by</th>
-      <td>{{dc.qtn.created_by.first_name}} {{dc.qtn.created_by.last_name}} (<a href="mailto:{{dc.qtn.created_by.email}}">{{dc.qtn.created_by.email}}</a>)</td>
+      <td>{{dc.project.created_by.first_name}} {{dc.project.created_by.last_name}} (<a href="mailto:{{dc.project.created_by.email}}">{{dc.project.created_by.email}}</a>)</td>
     </tr>
     {% endif %}
     <tr>
       <th>Based on</th>
       <td>{{dc.pkg.name}}, {{dc.pkg.version}} (<code>{{dc.pkg.org_id}}:{{dc.pkg.km_id}}:{{dc.pkg.version}}</code>)</td>
     </tr>
-    {% for version in dc.qtn.versions if version.uuid == dc.qtn.version %}
+    {% for version in dc.project.versions if version.uuid == dc.project.version %}
     <tr>
       <th>Version</th>
       <td>{{version.name}} ({{ version.created_at|datetime_format("%d %b %Y %H:%M:%S") }} UTC)</td>
@@ -285,16 +285,16 @@
       <td>{{dc.current_phase.title}}</td>
     </tr>
     {% endif %}
-    {% if dc.qtn.project_tags|length > 0 %}
+    {% if dc.project.project_tags|length > 0 %}
     <tr>
       <th>Project Tags</th>
-      <td class="tags-row">{% for tag in dc.qtn.project_tags %}<span class="tag project-tag">{{ tag }}</span> {% endfor %}</td>
+      <td class="tags-row">{% for tag in dc.project.project_tags %}<span class="tag project-tag">{{ tag }}</span> {% endfor %}</td>
     </tr>
     {% endif %}
-    {% if dc.qtn.description %}
+    {% if dc.project.description %}
     <tr>
       <th>Description</th>
-      <td>{{ dc.qtn.description }}</td>
+      <td>{{ dc.project.description }}</td>
     </tr>
     {% endif %}
     <tr>
@@ -310,7 +310,7 @@
     <h2>History of Versions</h2>
     <p>The named versions of this document:</p>
     <ul>
-      {% for version in dc.qtn.versions|reverse %}
+      {% for version in dc.project.versions|reverse %}
         <li>
           <strong>{{ version.name }}</strong> ({{ version.created_at|datetime_format("%d %b %Y") }})
           <p>{{ version.description }}</p>
@@ -324,7 +324,7 @@
     <div>
       {{ renderReport(dc.report.total_report) }}
     </div>
-    {% if dc.qtn.versions|length > 0 %}
+    {% if dc.project.versions|length > 0 %}
       {{ renderVersionsOverview() }}
     {% endif %}
     {% for chapter in dc.km.chapters %}
@@ -341,7 +341,7 @@
 {# ------------------------------------------------------------------------------------ #}
 <html>
   <head>
-    <title>{{dc.qtn.name}}</title>
+    <title>{{dc.project.name}}</title>
     <meta charset="utf-8">
   </head>
   <body>
