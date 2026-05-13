@@ -108,40 +108,106 @@
   </div>
 {%- endmacro -%}
 {%- macro renderAnswerList(question, reply, path, humanIdentifier) -%}
-  <div>
-    <h4>Answers ({{reply.items|length}} items)</h4>
-    {% set itemPathPrefix = path ~ "." %}
-    {% set hiPrefix = humanIdentifier ~ "." %}
-    {% for i in reply.items %}
-      {% set itemPath = itemPathPrefix ~ i %}
+<div class="answer-block answer-items" id="{{path}}" data-path="{{path}}" data-type="answer">
+  <h4>Answers</h4>
+  {% set itemPathPrefix = path ~ "." %}
+  {% set hiPrefix = humanIdentifier ~ "." %}
+  {% if question.followups|length > 0 and question.followups|length < 6 %}
+    {# --- TABLE VIEW: fewer than 6 sub-questions --- #}
+    <table class="answer-items-table">
+      <thead>
+        <tr>
+          <th class="item-index-col">#</th>
+          {% for fq in question.followups %}
+          <th>{{ fq.title }}</th>
+          {% endfor %}
+        </tr>
+      </thead>
+      <tbody>
+        {% for itemUuid in reply.items %}
+          {% set itemPath = itemPathPrefix ~ itemUuid %}
+          <tr id="item-{{ question.uuid }}-{{itemUuid}}" data-path="{{itemPath}}">
+            <td class="item-index-col">{{ loop.index }}</td>
+            {% for fq in question.followups %}
+              {% set fqPath = itemPath ~ "." ~ fq.uuid %}
+              {% set fqReply = fq.replies.get(fqPath) %}
+              <td>
+                {% if fqReply and fqReply.value %}
+                  {% if fq is of_type("ValueQuestion") and fqReply is of_type("StringReply") %}
+                    <span>{{ fqReply.markdown_plain }}</span>
+                  {% elif fqReply.is_integration or fqReply.is_legacy_integration %}
+                    <span>{{ fqReply.value|markdown }}</span>
+                  {% elif fq is of_type("OptionsQuestion") and fqReply is of_type("AnswerReply") %}
+                    <span>{{ fqReply.answer.label }}</span>
+                  {% elif fq is of_type("MultiChoiceQuestion") and fqReply is of_type("MultiChoiceReply") %}
+                    <span>
+                      {%- set chosen = [] -%}
+                      {%- for choice in fq.choices -%}
+                        {%- if choice in fqReply.choices -%}{%- do chosen.append(choice.label) -%}{%- endif -%}
+                      {%- endfor -%}
+                      {{ chosen | join(", ") }}
+                    </span>
+                  {% elif fq is of_type("ItemSelectQuestion") and fqReply is of_type("ItemSelectReply") %}
+                    <a href="#item-{{ fq.list_question_uuid }}-{{ fqReply.item_uuid }}">{{ fqReply.item_title }}</a>
+                  {% elif fq is of_type("FileQuestion") and fqReply is of_type("FileReply") %}
+                    {% if fqReply.file %}
+                      <a href="{{ fqReply.file.download_url }}" target="_blank">{{ fqReply.file.name }}</a>
+                    {% else %}
+                      <span class="no-answer">—</span>
+                    {% endif %}
+                  {% else %}
+                    <span>{{ fqReply.value }}</span>
+                  {% endif %}
+                {% else %}
+                  <span class="no-answer">—</span>
+                {% endif %}
+              </td>
+            {% endfor %}
+          </tr>
+        {% else %}
+          <tr>
+            <td colspan="{{ question.followups|length + 1 }}" class="no-answer">No answer items</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    {# --- LIST VIEW: 6+ sub-questions or no followups --- #}
+    {% for itemUuid in reply.items %}
+      {% set itemPath = itemPathPrefix ~ itemUuid %}
       {% set itemHumanIdentifier = hiPrefix ~ (loop.index - 1)|of_alphabet %}
-      <div class="answer-item" id="{{itemPath}}">
+      <div class="answer-item" id="item-{{ question.uuid }}-{{itemUuid}}" data-path="{{itemPath}}">
         <div class="followups">
-          {% for question in question.followups %}
+          {% for subQuestion in question.followups %}
             {% set x = loop.index %}
-            {{ renderQuestion(question, itemPath, itemHumanIdentifier ~ "." ~ x) }}
+            {{ renderQuestion(subQuestion, itemPath, itemHumanIdentifier ~ "." ~ x) }}
           {% else %}
-            <i>No follow up questions</i>
+            No follow up questions
           {% endfor %}
         </div>
       </div>
     {% else %}
-      <i>No answer items</i>
+      No answer items
     {% endfor %}
-  </div>
+  {% endif %}
+</div>
 {%- endmacro -%}
 {%- macro renderAnswerChoiceList(question, reply, path, humanIdentifier) -%}
-  <div>
-    <ul>
-    {% for choice in question.choices %}
-      {%- if choice in reply.choices %}
-        <li>✔️ {{ choice.label }}</li>
-      {%- else %}
-        <li>❌ {{ choice.label }}</li>
-      {%- endif %}
-    {% endfor %}
-    </ul>
-  </div>
+<div class="answer-block answer-items" id="{{path}}" data-path="{{path}}" data-type="answer">
+  <p class="answer">
+    {%- set chosen = [] -%}
+    {%- for choice in question.choices -%}
+      {%- if choice in reply.choices -%}
+        {%- do chosen.append(choice.label) -%}
+      {%- endif -%}
+    {%- endfor -%}
+    {% if chosen|length > 0 %}
+      <span>{{ chosen | join(", ") }}</span>
+    {% else %}
+      <span class="no-answer">No choices selected</span>
+    {% endif %}
+  </p>
+</div>
 {%- endmacro -%}
 {%- macro renderAnswerItemSelect(question, reply, path, humanIdentifier) -%}
   <div>

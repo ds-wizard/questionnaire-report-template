@@ -80,29 +80,42 @@
 {%- endif -%}
 {%- endmacro -%}
 {%- macro renderAnswerList(question, reply, path, humanIdentifier) -%}
-{%- set itemPathPrefix = path ~ "." -%}
-{%- set hiPrefix = humanIdentifier ~ "." -%}
-{%- for i in reply.items -%}
-{%- set itemPath = itemPathPrefix ~ i -%}
-{%- set itemHumanIdentifier = hiPrefix ~ (loop.index - 1)|of_alphabet -%}
-{%- for question in question.followups -%}
-{%- set x = loop.index -%}
-{{ renderQuestion(question, itemPath, itemHumanIdentifier ~ "." ~ x) }}
-{%- else -%}
-*No follow up questions*
-{%- endfor -%}
-{%- else %}
+{% set itemPathPrefix = path ~ "." %}
+{% set hiPrefix = humanIdentifier ~ "." %}
+{% if question.followups|length > 0 and question.followups|length < 6 %}
+| # | {% for fq in question.followups %}{{ fq.title }} | {% endfor %}
+
+| --- | {% for fq in question.followups %}--- | {% endfor %}
+
+{% for itemUuid in reply.items %}
+{% set itemPath = itemPathPrefix ~ itemUuid %}
+| {{ loop.index }} | {% for fq in question.followups %}{% set fqPath = itemPath ~ "." ~ fq.uuid %}{% set fqReply = fq.replies.get(fqPath) %}{% if fqReply and fqReply.value %}{% if fq is of_type("ValueQuestion") and fqReply is of_type("StringReply") %}{{ fqReply.markdown_plain | replace("\n", " ") }}{% elif fq is of_type("OptionsQuestion") and fqReply is of_type("AnswerReply") %}{{ fqReply.answer.label }}{% elif fq is of_type("MultiChoiceQuestion") and fqReply is of_type("MultiChoiceReply") %}{%- set chosen = [] -%}{%- for choice in fq.choices -%}{%- if choice in fqReply.choices -%}{%- do chosen.append(choice.label) -%}{%- endif -%}{%- endfor -%}{{ chosen | join(", ") }}{% elif fqReply.is_integration or fqReply.is_legacy_integration %}{{ fqReply.value | replace("\n", " ") }}{% else %}{{ fqReply.value | replace("\n", " ") }}{% endif %}{% else %}—{% endif %} | {% endfor %}
+
+{% else %}
 *No answer items*
-{%- endfor -%}
+{% endfor %}
+{% else %}
+{% for itemUuid in reply.items %}
+{% set itemPath = itemPathPrefix ~ itemUuid %}
+{% set itemHumanIdentifier = hiPrefix ~ (loop.index - 1)|of_alphabet %}
+**Item {{ loop.index }}**
+
+{% for subQuestion in question.followups %}
+{{ renderQuestion(subQuestion, itemPath, itemHumanIdentifier ~ "." ~ loop.index) }}
+{% else %}
+*No follow up questions*
+{% endfor %}
+{% else %}
+*No answer items*
+{% endfor %}
+{% endif %}
 {%- endmacro -%}
 {%- macro renderAnswerChoiceList(question, reply, path, humanIdentifier) -%}
+{%- set chosen = [] -%}
 {%- for choice in question.choices -%}
-{%- if choice in reply.choices %}
-* ✔️ {{ choice.label }}
-{%- else %}
-* ❌ {{ choice.label }}
-{%- endif %}
+  {%- if choice in reply.choices -%}{%- do chosen.append(choice.label) -%}{%- endif -%}
 {%- endfor -%}
+{% if chosen|length > 0 %}{{ chosen | join(", ") }}{% else %}*No choices selected*{% endif %}
 {%- endmacro -%}
 {%- macro renderAnswerItemSelect(question, reply, path, humanIdentifier) -%}
 ✔️ {{ reply.item_title }}

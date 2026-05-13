@@ -465,3 +465,43 @@ div#versions td.no-versions {
   border-radius: .5rem;
   padding: 1rem;
 }
+/* --- List question: table view (< 6 sub-questions) --- */
+.answer-items-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0.5em 0 1em 0;
+  font-size: 0.95em;
+}
+
+.answer-items-table thead tr {
+  background-color: #f0f0f0;
+}
+
+.answer-items-table th {
+  text-align: left;
+  padding: 0.4em 0.75em;
+  border: 1px solid #ddd;
+  font-weight: 600;
+  color: #333;
+}
+
+.answer-items-table td {
+  padding: 0.4em 0.75em;
+  border: 1px solid #ddd;
+  vertical-align: top;
+}
+
+.answer-items-table tbody tr:nth-child(even) {
+  background-color: #fafafa;
+}
+
+.answer-items-table .item-index-col {
+  width: 2em;
+  text-align: center;
+  color: #888;
+  font-size: 0.85em;
+}
+
+.answer-items-table .no-answer {
+  color: #aaa;
+}

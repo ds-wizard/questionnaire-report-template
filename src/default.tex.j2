@@ -54,36 +54,43 @@
 {%- endif -%}
 {%- endmacro -%}
 {%- macro renderAnswerList(question, reply, path, humanIdentifier) -%}
-{%- set itemPathPrefix = path ~ "." -%}
-{%- set hiPrefix = humanIdentifier ~ "." -%}
-\begin{itemize}
-  \item[\ArrowBoldDownRight] Answered with {{reply.items|length}} item{% if reply.items|length > 1 %}s{% endif %} as follows.
-\end{itemize}
-{%- for i in reply.items -%}
-{%- set itemPath = itemPathPrefix ~ i -%}
-{%- set itemHumanIdentifier = hiPrefix ~ (loop.index - 1)|of_alphabet -%}
-% Answer item: {{itemPath}}
-
-{%- for question in question.followups -%}
-  {%- set x = loop.index -%}
-{{ renderQuestion(question, itemPath, itemHumanIdentifier ~ "." ~ x, False) }}
-{% else -%}
-  \textit{No follow up questions}
+{% set itemPathPrefix = path ~ "." %}
+{% set hiPrefix = humanIdentifier ~ "." %}
+{% if question.followups|length > 0 and question.followups|length < 6 %}
+\begin{table}[h]
+\begin{tabular}{| l |{% for fq in question.followups %} p{{% if question.followups|length == 1 %}0.8{% elif question.followups|length == 2 %}0.38{% elif question.followups|length == 3 %}0.24{% elif question.followups|length == 4 %}0.17{% else %}0.13{% endif %}\textwidth} |{% endfor %}}
+\hline
+\textbf{\#} & {% for fq in question.followups %}\textbf{ {{- fq.title | replace("_","\_") | replace("&","\&") | replace("%","\%") | replace("#","\#") -}} }{% if not loop.last %} & {% endif %}{% endfor %} \\
+\hline
+{% for itemUuid in reply.items %}
+{% set itemPath = itemPathPrefix ~ itemUuid %}
+{{ loop.index }} & {% for fq in question.followups %}{% set fqPath = itemPath ~ "." ~ fq.uuid %}{% set fqReply = fq.replies.get(fqPath) %}{% if fqReply and fqReply.value %}{% if fq is of_type("ValueQuestion") and fqReply is of_type("StringReply") %}{{ fqReply.markdown_plain | replace("_","\_") | replace("&","\&") | replace("%","\%") | replace("#","\#") | replace("\n"," ") }}{% elif fq is of_type("OptionsQuestion") and fqReply is of_type("AnswerReply") %}{{ fqReply.answer.label | replace("_","\_") | replace("&","\&") }}{% elif fq is of_type("MultiChoiceQuestion") and fqReply is of_type("MultiChoiceReply") %}{%- set chosen = [] -%}{%- for choice in fq.choices -%}{%- if choice in fqReply.choices -%}{%- do chosen.append(choice.label) -%}{%- endif -%}{%- endfor -%}{{ chosen | join(", ") | replace("_","\_") | replace("&","\&") }}{% else %}{{ fqReply.value | replace("_","\_") | replace("&","\&") | replace("%","\%") | replace("\n"," ") }}{% endif %}{% else %}---{% endif %}{% if not loop.last %} & {% endif %}{% endfor %} \\
+\hline
+{% else %}
+\textit{No answer items}
 {% endfor %}
+\end{tabular}
+\end{table}
+{% else %}
+{% for itemUuid in reply.items %}
+{% set itemPath = itemPathPrefix ~ itemUuid %}
+{% set itemHumanIdentifier = hiPrefix ~ (loop.index - 1)|of_alphabet %}
+{% for subQuestion in question.followups %}
+{{ renderQuestion(subQuestion, itemPath, itemHumanIdentifier ~ "." ~ loop.index) }}
+{% else %}
+No follow up questions
 {% endfor %}
+{% else %}
+No answer items
+{% endfor %}
+{% endif %}
 {%- endmacro -%}
 {%- macro renderAnswerChoiceList(question, reply, path, humanIdentifier) -%}
-{%- if question.choices|length > 0 -%}
-\begin{itemize}
+{%- set chosen = [] -%}
 {%- for choice in question.choices -%}
-{%- if choice in reply.choices %}
-  \item[\CheckmarkBold] {{ choice.label }}
-{%- else %}
-  \item[\XSolidBrush] {{ choice.label }}
-{%- endif -%}
-{%- endfor %}
-\end{itemize}
-{%- endif %}
+  {%- if choice in reply.choices -%}{%- do chosen.append(choice.label) -%}{%- endif -%}
+{%- endfor -%}
+{% if chosen|length > 0 %}{{ chosen | join(", ") }}{% else %}\textit{No choices selected}{% endif %}
 {%- endmacro -%}
 {%- macro renderAnswerItemSelect(question, reply, path, humanIdentifier) -%}
 \begin{itemize}
