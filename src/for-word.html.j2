@@ -3,13 +3,14 @@
 {#  VARIABLES                                                                           #}
 {# ------------------------------------------------------------------------------------ #}
 {%- set dc = ctx|to_context_obj -%}
+{%- from "src/dates.j2" import formatDate, formatDateTime -%}
 {# ------------------------------------------------------------------------------------ #}
 {#  TAGS, REFERENCES, and EXPERTS MACROS                                                 #}
 {# ------------------------------------------------------------------------------------ #}
 {%- macro renderTags(question) -%}
   {% if question.tags|length > 0 %}
     <div>
-      🏷️ <b>Tags:</b> {% for tag in question.tags %}<i>{{tag.name}}</i>{% if not loop.last %}, {% endif %}{% endfor %}
+      🏷️ <b>{% trans %}Tags:{% endtrans %}</b> {% for tag in question.tags %}<i>{{tag.name}}</i>{% if not loop.last %}, {% endif %}{% endfor %}
     </div>
   {% endif %}
 {%- endmacro -%}
@@ -27,7 +28,7 @@
   {% endfor %}
   {% if refs|length > 0 %}
     <div>
-      📖 <b>Resource Pages:</b> {% for ref in refs %}{%- set resourcePageLink = dc.config.client_url ~ '/knowledge-models/' ~ dc.pkg.id ~ '/resource-pages/' ~ ref.uuid -%}<a id="{{ref.ref_uuid}}" class="reference resourcepage-link" href="{{ resourcePageLink }}"><i>{{ ref.collection_title }} - {{ ref.title }}</i></a>{% if not loop.last %}, {% endif %}{% endfor %}
+      📖 <b>{% trans %}Resource Pages:{% endtrans %}</b> {% for ref in refs %}{%- set resourcePageLink = dc.config.client_url ~ '/knowledge-models/' ~ dc.pkg.id ~ '/resource-pages/' ~ ref.uuid -%}<a id="{{ref.ref_uuid}}" class="reference resourcepage-link" href="{{ resourcePageLink }}"><i>{{ ref.collection_title }} - {{ ref.title }}</i></a>{% if not loop.last %}, {% endif %}{% endfor %}
     </div>
   {% endif %}
 {%- endmacro -%}
@@ -44,7 +45,7 @@
   {% endfor %}
   {% if refs|length > 0 %}
     <div>
-      🔗 <b>External Links:</b> {% for ref in refs %}<a href="{{ref.url}}" target="_blank"><i>{{ref.label}}</i></a>{% if not loop.last %}, {% endif %}{% endfor %}
+      🔗 <b>{% trans %}External Links:{% endtrans %}</b> {% for ref in refs %}<a href="{{ref.url}}" target="_blank"><i>{{ref.label}}</i></a>{% if not loop.last %}, {% endif %}{% endfor %}
     </div>
   {% endif %}
 {%- endmacro -%}
@@ -61,7 +62,7 @@
   {% endfor %}
   {% if experts|length > 0 %}
     <div>
-      🙋 <b>Experts:</b> {% for expert in experts %}<i>{{expert.name}} (<a href="mailto:{{expert.email}}">{{expert.email}}</a>){% if not loop.last %}, {% endif %}</i>{% endfor %}
+      🙋 <b>{% trans %}Experts:{% endtrans %}</b> {% for expert in experts %}<i>{{expert.name}} (<a href="mailto:{{expert.email}}">{{expert.email}}</a>){% if not loop.last %}, {% endif %}</i>{% endfor %}
     </div>
   {% endif %}
 {%- endmacro -%}
@@ -98,7 +99,7 @@
     </p>
     {% if answer.advice %}
     <div>
-      <b>Advice:</b> {{answer.advice|markdown}}
+      <b>{% trans %}Advice:{% endtrans %}</b> {{answer.advice|markdown}}
     </div>
     {% endif %}
     {% if answer.followups|length > 0 %}
@@ -114,7 +115,7 @@
 {%- endmacro -%}
 {%- macro renderAnswerList(question, reply, path, humanIdentifier) -%}
   <div>
-    <h4>Answers ({{reply.items|length}} items)</h4>
+    <h4>{% trans count=reply.items|length %}Answers ({{ count }} item){% pluralize %}Answers ({{ count }} items){% endtrans %}</h4>
     {% set itemPathPrefix = path ~ "." %}
     {% set hiPrefix = humanIdentifier ~ "." %}
     {% for i in reply.items %}
@@ -126,12 +127,12 @@
             {% set x = loop.index %}
             {{ renderQuestion(question, itemPath, itemHumanIdentifier ~ "." ~ x) }}
           {% else %}
-            <i>No follow up questions</i>
+            <i>{% trans %}No follow up questions{% endtrans %}</i>
           {% endfor %}
         </div>
       </div>
     {% else %}
-      <i>No answer items</i>
+      <i>{% trans %}No answer items{% endtrans %}</i>
     {% endfor %}
   </div>
 {%- endmacro -%}
@@ -158,7 +159,7 @@
   {% if reply.file %}
     <p>✔️ <a href="{{ reply.file.download_url }}" target="_blank">{{ reply.file.name }}</a> ({{ reply.file.size|bytesize_format }})</p>
   {% else %}
-    <p>❌ The file has been deleted</p>
+    <p>❌ {% trans %}The file has been deleted{% endtrans %}</p>
   {% endif %}
   </div>
 {%- endmacro -%}
@@ -192,7 +193,7 @@
       {{ renderAnswerFile(question, reply, path, humanIdentifier) }}
     {% endif %}
   {% else %}
-    <p>❗ <i>This question has not been answered yet!</i></p>
+    <p>❗ <i>{% trans %}This question has not been answered yet!{% endtrans %}</i></p>
   {% endif %}
 {%- endmacro -%}
 {%- macro renderQuestion(question, path, humanIdentifier) -%}
@@ -214,13 +215,13 @@
 {# ------------------------------------------------------------------------------------ #}
 {%- macro renderReport(report) -%}
   <section>
-    <h2>Summary</h2>
-    <h3>Answered indication</h3>
+    <h2>{% trans %}Summary{% endtrans %}</h2>
+    <h3>{% trans %}Answered indication{% endtrans %}</h3>
     <table>
       <tbody>
         {% for item in report.indications %}
           <tr>
-            <td>Answered {% if item.is_for_phase %}(current phase){% endif %}</td>
+            <td>{% if item.is_for_phase %}{% trans %}Answered (current phase){% endtrans %}{% else %}{% trans %}Answered{% endtrans %} {% endif %}</td>
             <td>{{item.answered}} / {{item.total}} </td>
             <td>{{ "%.2f"|format(item.percentage)}} %</td>
           </tr>
@@ -228,9 +229,9 @@
       </tbody>
     </table>
     {% if report.metrics|length > 0 %}
-    <h3>Metrics</h3>
+    <h3>{% trans %}Metrics{% endtrans %}</h3>
     <table>
-      <thead><tr><th>Metric</th><th>Score</th></tr></thead>
+      <thead><tr><th>{% trans %}Metric{% endtrans %}</th><th>{% trans %}Score{% endtrans %}</th></tr></thead>
       <tbody>
         {% for item in report.metrics %}
           <tr>
@@ -256,7 +257,7 @@
           {% for question in chapter.questions %}
             {{ renderQuestion(question, chapter.uuid, loop.index) }}
           {% else %}
-            <p><i>No questions</i></p>
+            <p><i>{% trans %}No questions{% endtrans %}</i></p>
           {% endfor %}
         </section>
       </section>
@@ -267,46 +268,46 @@
 {%- macro renderFrontPage() -%}
   <table>
     <tr>
-      <th>Organization</th>
+      <th>{% trans %}Organization{% endtrans %}</th>
       <td>{{dc.org.name}}</td>
     </tr>
     {% if dc.project.created_by %}
     <tr>
-      <th>Created by</th>
+      <th>{% trans %}Created by{% endtrans %}</th>
       <td>{{dc.project.created_by.first_name}} {{dc.project.created_by.last_name}} (<a href="mailto:{{dc.project.created_by.email}}">{{dc.project.created_by.email}}</a>)</td>
     </tr>
     {% endif %}
     <tr>
-      <th>Based on</th>
+      <th>{% trans %}Based on{% endtrans %}</th>
       <td>{{dc.pkg.name}}, {{dc.pkg.version}} (<code>{{dc.pkg.org_id}}:{{dc.pkg.km_id}}:{{dc.pkg.version}}</code>)</td>
     </tr>
     {% for version in dc.project.versions if version.uuid == dc.project.version %}
     <tr>
-      <th>Version</th>
-      <td>{{version.name}} ({{ version.created_at|datetime_format("%d %b %Y %H:%M:%S") }} UTC)</td>
+      <th>{% trans %}Version{% endtrans %}</th>
+      <td>{% trans name=version.name, date=formatDateTime(version.created_at) %}{{ name }} ({{ date }} UTC){% endtrans %}</td>
     </tr>
     {% endfor %}
     {% if dc.current_phase %}
     <tr>
-      <th>Project Phase</th>
+      <th>{% trans %}Project Phase{% endtrans %}</th>
       <td>{{dc.current_phase.title}}</td>
     </tr>
     {% endif %}
     {% if dc.project.project_tags|length > 0 %}
     <tr>
-      <th>Project Tags</th>
+      <th>{% trans %}Project Tags{% endtrans %}</th>
       <td class="tags-row">{% for tag in dc.project.project_tags %}<span class="tag project-tag">{{ tag }}</span> {% endfor %}</td>
     </tr>
     {% endif %}
     {% if dc.project.description %}
     <tr>
-      <th>Description</th>
+      <th>{% trans %}Description{% endtrans %}</th>
       <td>{{ dc.project.description }}</td>
     </tr>
     {% endif %}
     <tr>
-      <th>Created at</th>
-      <td>{{ dc.doc.created_at|datetime_format("%d %b %Y") }}</td>
+      <th>{% trans %}Created at{% endtrans %}</th>
+      <td>{{ formatDate(dc.doc.created_at) }}</td>
     </tr>
   </table>
 
@@ -314,12 +315,12 @@
 {%- endmacro -%}
 {%- macro renderVersionsOverview() -%}
   <div>
-    <h2>History of Versions</h2>
-    <p>The named versions of this document:</p>
+    <h2>{% trans %}History of Versions{% endtrans %}</h2>
+    <p>{% trans %}The named versions of this document:{% endtrans %}</p>
     <ul>
       {% for version in dc.project.versions|reverse %}
         <li>
-          <strong>{{ version.name }}</strong> ({{ version.created_at|datetime_format("%d %b %Y") }})
+          <strong>{{ version.name }}</strong> ({{ formatDate(version.created_at) }})
           <p>{{ version.description }}</p>
         </li>
       {% endfor %}
@@ -338,7 +339,7 @@
       \newpage
       {{ renderChapter(chapter, loop.index) }}
     {% else %}
-      <p><i>No chapters</i></p>
+      <p><i>{% trans %}No chapters{% endtrans %}</i></p>
     {% endfor %}
 
   </div>
@@ -346,7 +347,7 @@
 {# ------------------------------------------------------------------------------------ #}
 {#  HTML TEMPLATE                                                                       #}
 {# ------------------------------------------------------------------------------------ #}
-<html>
+<html lang="{{ dc.doc.locale.code if dc.doc.locale else "en" }}">
   <head>
     <title>{{dc.project.name}}</title>
     <meta charset="utf-8">

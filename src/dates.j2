@@ -1,0 +1,37 @@
+{#- ------------------------------------------------------------------------------------ -#}
+{#-  DATES (translatable month names and order; strftime's %b is always English)         -#}
+{#- ------------------------------------------------------------------------------------ -#}
+{%- macro monthName(month) -%}
+{%- set names = [
+  pgettext('month', 'Jan'),
+  pgettext('month', 'Feb'),
+  pgettext('month', 'Mar'),
+  pgettext('month', 'Apr'),
+  pgettext('month', 'May'),
+  pgettext('month', 'Jun'),
+  pgettext('month', 'Jul'),
+  pgettext('month', 'Aug'),
+  pgettext('month', 'Sep'),
+  pgettext('month', 'Oct'),
+  pgettext('month', 'Nov'),
+  pgettext('month', 'Dec'),
+] -%}
+{{- names[month - 1] -}}
+{%- endmacro -%}
+{%- macro formatDate(value) -%}
+{%- if value -%}
+{%- set day = value|datetime_format("%d") -%}
+{%- set month = monthName(value|datetime_format("%m")|int) -%}
+{%- set year = value|datetime_format("%Y") -%}
+{#- TRANSLATORS: date, e.g. "05 Oct 2026" (day, abbreviated month, year) -#}
+{%- trans day=day, month=month, year=year %}{{ day }} {{ month }} {{ year }}{% endtrans -%}
+{%- endif -%}
+{%- endmacro -%}
+{%- macro formatDateTime(value) -%}
+{%- if value -%}
+{%- set date = formatDate(value) -%}
+{%- set time = value|datetime_format("%H:%M:%S") -%}
+{#- TRANSLATORS: date and time in UTC, e.g. "05 Oct 2026 14:30:00" -#}
+{%- trans date=date, time=time %}{{ date }} {{ time }}{% endtrans -%}
+{%- endif -%}
+{%- endmacro -%}
