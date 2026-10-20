@@ -8,6 +8,15 @@ This generic *default* template for [Data Stewardship Wizard](https://ds-wizard.
 This template is available through [DSW Registry](https://registry.ds-wizard.org/templates).
 
 
+## Translations
+
+All texts of the template are marked for translation (source language: English), including month
+names in dates (and the `babel` language of the LaTeX format). The Wizard (4.35.0 or newer)
+generates the POT file when the template is released; upload translated PO files as document
+template locales to get documents in other languages. Content of the knowledge model and the
+answers are not translated.
+
+
 ## Issues and Contributing
 
 This document template for DSW is available as open-source via GitHub Repository [ds-wizard/questionnaire-report-template](https://github.com/ds-wizard/questionnaire-report-template), you can [report issues](https://github.com/ds-wizard/questionnaire-report-template/issues) there and fork it for customisations or contributions.
@@ -27,6 +36,14 @@ This document template for DSW is available as open-source via GitHub Repository
 
 
 ## Changelog
+
+### 2.18.0
+
+- Adjusted to template metamodel version 18.3 (released in DSW 4.35.0)
+- Made translatable (document template locales), including dates and plurals
+- Fixed HTML entities in Markdown output
+- Fixed invalid HTML (versions table, nested paragraphs)
+- Markdown format uses `text/markdown` content type
 
 ### 2.17.0
 

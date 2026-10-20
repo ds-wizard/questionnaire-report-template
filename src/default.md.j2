@@ -3,12 +3,13 @@
 {#-  VARIABLES                                                                           -#}
 {#- ------------------------------------------------------------------------------------ -#}
 {%- set dc = ctx|to_context_obj -%}
+{%- from "src/dates.j2" import formatDate, formatDateTime -%}
 {#- ------------------------------------------------------------------------------------ -#}
 {#-  TAGS, REFERENCES, and EXPERTS MACROS                                                 -#}
 {#- ------------------------------------------------------------------------------------ -#}
 {%- macro renderTags(question) -%}
 {%- if question.tags|length > 0 %}
-* 🏷️ **Tags:** {% for tag in question.tags %}*{{tag.name}}*{% if not loop.last %}, {% endif %}{% endfor %}
+* 🏷️ **{% trans %}Tags:{% endtrans %}** {% for tag in question.tags %}*{{tag.name}}*{% if not loop.last %}, {% endif %}{% endfor %}
 {%- endif %}
 {%- endmacro -%}
 {%- macro renderResourcePageReferences(question) -%}
@@ -24,7 +25,7 @@
 {% endif %}
 {% endfor %}
 {% if refs|length > 0 %}
-* 📖 **Resource Pages:** {% for ref in refs %}{%- set resourcePageLink = dc.config.client_url ~ '/knowledge-models/' ~ dc.pkg.id ~ '/resource-pages/' ~ ref.uuid -%}[{{ ref.collection_title }} - {{ ref.title }}]({{resourcePageLink}}){% if not loop.last %}, {% endif %}{% endfor %}
+* 📖 **{% trans %}Resource Pages:{% endtrans %}** {% for ref in refs %}{%- set resourcePageLink = dc.config.client_url ~ '/knowledge-models/' ~ dc.pkg.id ~ '/resource-pages/' ~ ref.uuid -%}[{{ ref.collection_title }} - {{ ref.title }}]({{resourcePageLink}}){% if not loop.last %}, {% endif %}{% endfor %}
 {% endif %}
 {%- endmacro -%}
 {%- macro renderURLReferences(question) -%}
@@ -39,7 +40,7 @@
 {% endif %}
 {% endfor %}
 {% if refs|length > 0 %}
-* 🔗 **External links**: {% for reference in refs %}[{{reference.label}}]({{reference.url}}){% if not loop.last %}, {% endif %}{% endfor %}
+* 🔗 **{% trans %}External links{% endtrans %}**: {% for reference in refs %}[{{reference.label}}]({{reference.url}}){% if not loop.last %}, {% endif %}{% endfor %}
 {%- endif -%}
 {%- endmacro -%}
 {%- macro renderExperts(question) -%}
@@ -54,7 +55,7 @@
 {% endif %}
 {% endfor %}
 {% if experts|length > 0 %}
-* 🙋 **Experts:** {% for expert in experts %}*{{expert.name}}* <{{expert.email}}>{% if not loop.last %}, {% endif %}{% endfor %}
+* 🙋 **{% trans %}Experts:{% endtrans %}** {% for expert in experts %}*{{expert.name}}* <{{expert.email}}>{% if not loop.last %}, {% endif %}{% endfor %}
 {%- endif -%}
 {%- endmacro -%}
 {#- ------------------------------------------------------------------------------------ -#}
@@ -93,10 +94,10 @@
 {%- set x = loop.index -%}
 {{ renderQuestion(question, itemPath, itemHumanIdentifier ~ "." ~ x) }}
 {%- else -%}
-*No follow up questions*
+*{% trans %}No follow up questions{% endtrans %}*
 {%- endfor -%}
 {%- else %}
-*No answer items*
+*{% trans %}No answer items{% endtrans %}*
 {%- endfor -%}
 {%- endmacro -%}
 {%- macro renderAnswerChoiceList(question, reply, path, humanIdentifier) -%}
@@ -115,7 +116,7 @@
 {% if reply.file %}
 ✔️ [{{ reply.file.name }}]({{ reply.file.download_url }}) ({{ reply.file.size|bytesize_format }})
 {% else %}
-❌ The file has been deleted
+❌ {% trans %}The file has been deleted{% endtrans %}
 {% endif %}
 {%- endmacro -%}
 {#- ------------------------------------------------------------------------------------ -#}
@@ -145,7 +146,7 @@
 {{ renderAnswerFile(question, reply, path, humanIdentifier) }}
 {%- endif -%}
 {%- else %}
-❗ *This question has not been answered yet!*
+❗ *{% trans %}This question has not been answered yet!{% endtrans %}*
 {%- endif -%}
 {%- endmacro -%}
 {%- macro renderQuestion(question, path, humanIdentifier) -%}
@@ -163,15 +164,15 @@
 {#- ------------------------------------------------------------------------------------ -#}
 {%- macro renderReport(report) -%}
 {%- if report.indications|length > 0 %}
-### Summary
+### {% trans %}Summary{% endtrans %}
 
 {% for item in report.indications -%}
-* Answered{% if item.is_for_phase %} (current phase){% endif %}: **{{item.answered}} / {{item.total}}** ({{"%.2f"|format(item.percentage)}} %)
+* {% if item.is_for_phase %}{% trans %}Answered (current phase){% endtrans %}{% else %}{% trans %}Answered{% endtrans %}{% endif %}: **{{item.answered}} / {{item.total}}** ({{"%.2f"|format(item.percentage)}} %)
 {% endfor %}
 {% endif -%}
 {%- if report.metrics|length > 0 %}
 
-### Metrics
+### {% trans %}Metrics{% endtrans %}
 {% for item in report.metrics %}
 * {{item.metric.title}}: {{ "%.2f"|format(item.measure) }}
 {%- endfor %}
@@ -188,12 +189,12 @@
 {{ renderReport(chapterReport) }}
 {% endfor %}
 
-### Questions
+### {% trans %}Questions{% endtrans %}
 
 {% for question in chapter.questions %}
 {{ renderQuestion(question, chapter.uuid, loop.index) }}
 {%- else %}
-*No questions*
+*{% trans %}No questions{% endtrans %}*
 {%- endfor %}
 {%- endmacro -%}
 {#- ------------------------------------------------------------------------------------ -#}
@@ -201,36 +202,36 @@
 {#- ------------------------------------------------------------------------------------ -#}
 # {{ dc.project.name }}
 
-* Organization: **{{ dc.org.name }}**
+* {% trans name=dc.org.name %}Organization: **{{ name }}**{% endtrans %}
 {%- if dc.project.created_by %}
-* Created by: **{{ dc.project.created_by.first_name }} {{ dc.project.created_by.last_name }}** <{{ dc.project.created_by.email }}>
+* {% trans first_name=dc.project.created_by.first_name, last_name=dc.project.created_by.last_name, email=dc.project.created_by.email %}Created by: **{{ first_name }} {{ last_name }}** <{{ email }}>{% endtrans %}
 {%- endif %}
-* Based on: **{{ dc.pkg.name }}, {{ dc.pkg.version }}** (`{{ dc.pkg.org_id }}:{{ dc.pkg.km_id }}:{{ dc.pkg.version }}`)
+* {% trans name=dc.pkg.name, version=dc.pkg.version, org_id=dc.pkg.org_id, km_id=dc.pkg.km_id %}Based on: **{{ name }}, {{ version }}** (`{{ org_id }}:{{ km_id }}:{{ version }}`){% endtrans %}
 {%- for version in dc.project.versions if version.uuid == dc.project.version %}
-* Version: **{{ version.name }}** ({{ version.created_at|datetime_format("%d %b %Y %H:%M:%S") }} UTC)
+* {% trans name=version.name, date=formatDateTime(version.created_at) %}Version: **{{ name }}** ({{ date }} UTC){% endtrans %}
 {%- endfor %}
 {%- if dc.current_phase %}
-* Project phase: **{{ dc.current_phase.title }}**
+* {% trans title=dc.current_phase.title %}Project phase: **{{ title }}**{% endtrans %}
 {%- endif %}
 {%- if dc.project.project_tags|length > 0 %}
-* Project tags: {% for tag in dc.project.project_tags %}**{{ tag }}**{% if not loop.last %}, {% endif %}{% endfor %}
+* {% trans %}Project tags:{% endtrans %} {% for tag in dc.project.project_tags %}**{{ tag }}**{% if not loop.last %}, {% endif %}{% endfor %}
 {%- endif %}
 {%- if dc.project.description %}
-* Description: **{{ dc.project.description }}**
+* {% trans description=dc.project.description %}Description: **{{ description }}**{% endtrans %}
 {%- endif %}
-* Created at: **{{ dc.doc.created_at|datetime_format("%d %b %Y") }}**
+* {% trans date=formatDate(dc.doc.created_at) %}Created at: **{{ date }}**{% endtrans %}
 
-## Report
+## {% trans %}Report{% endtrans %}
 
 {{ renderReport(dc.report.total_report) }}
 
 {% if dc.project.versions|length > 0 %}
-## History of Versions
+## {% trans %}History of Versions{% endtrans %}
 
-The named versions of this document:
+{% trans %}The named versions of this document:{% endtrans %}
 
 {%- for version in dc.project.versions|reverse %}
-* **{{ version.name }}** ({{ version.created_at|datetime_format("%d %b %Y") }}): {{ version.description }}
+* **{{ version.name }}** ({{ formatDate(version.created_at) }}): {{ version.description }}
 {%- endfor %}
 {%- endif %}
 
@@ -239,6 +240,6 @@ The named versions of this document:
 {% for chapter in dc.km.chapters %}
 {{ renderChapter(chapter, loop.index) }}
 {% else %}
-*No chapters*
+*{% trans %}No chapters{% endtrans %}*
 {% endfor %}
 {% endautoescape %}

@@ -2,6 +2,7 @@
 {#-  VARIABLES                                                                           -#}
 {#- ------------------------------------------------------------------------------------ -#}
 {%- set dc = ctx|to_context_obj -%}
+{%- from "src/dates.j2" import formatDate, formatDateTime -%}
 {#- ------------------------------------------------------------------------------------ -#}
 {#-  ANSWERS MACROS                                                                      -#}
 {#- ------------------------------------------------------------------------------------ -#}
@@ -57,7 +58,7 @@
 {%- set itemPathPrefix = path ~ "." -%}
 {%- set hiPrefix = humanIdentifier ~ "." -%}
 \begin{itemize}
-  \item[\ArrowBoldDownRight] Answered with {{reply.items|length}} item{% if reply.items|length > 1 %}s{% endif %} as follows.
+  \item[\ArrowBoldDownRight] {% trans count=reply.items|length %}Answered with {{ count }} item as follows.{% pluralize %}Answered with {{ count }} items as follows.{% endtrans %}
 \end{itemize}
 {%- for i in reply.items -%}
 {%- set itemPath = itemPathPrefix ~ i -%}
@@ -68,7 +69,7 @@
   {%- set x = loop.index -%}
 {{ renderQuestion(question, itemPath, itemHumanIdentifier ~ "." ~ x, False) }}
 {% else -%}
-  \textit{No follow up questions}
+  \textit{ {%- trans %}No follow up questions{% endtrans %}}
 {% endfor %}
 {% endfor %}
 {%- endmacro -%}
@@ -95,7 +96,7 @@
 {% if reply.file %}
   \item[\CheckmarkBold] \href{{ "{" }}{{ reply.file.download_url }}{{ "}" }}{{ "{" }}{{ reply.file.name }}{{ "}" }} ({{ reply.file.size|bytesize_format }})
 {% else %}
-  \item[\XSolidBrush] \textit{The file has been deleted}
+  \item[\XSolidBrush] \textit{ {%- trans %}The file has been deleted{% endtrans %}}
 {% endif %}
 \end{itemize}
 {%- endmacro -%}
@@ -123,7 +124,7 @@
     {%- endif -%}
   {% else %}
 \begin{itemize}
-  \item[{% if isRequired %}\textcolor{colorReqQ}{% endif %}\XSolidBrush] \textit{This question has not been answered yet!}
+  \item[{% if isRequired %}\textcolor{colorReqQ}{% endif %}\XSolidBrush] \textit{ {%- trans %}This question has not been answered yet!{% endtrans %}}
 \end{itemize}
   {% endif -%}
 {%- endmacro -%}
@@ -138,22 +139,22 @@
   {%- if resourcePageReferences|length > 0 or urlReferences|length > 0 or tags|length > 0 or experts|length > 0 %}
 \begin{itemize}
   {%- if tags|length > 0 %}
-  \item \textit{Tags}: {% for tag in tags %}{% set color = tag.color[1:] if tag.color[0] == "#" else tag.color %}\setulcolor{{ "{" }}{{color}}{{ "}" }}\ul{{ "{" }}{{tag.name}}{{ "}" }}{% if not loop.last%}, {% endif %}{% endfor %}
+  \item \textit{ {%- trans %}Tags{% endtrans %}}: {% for tag in tags %}{% set color = tag.color[1:] if tag.color[0] == "#" else tag.color %}\setulcolor{{ "{" }}{{color}}{{ "}" }}\ul{{ "{" }}{{tag.name}}{{ "}" }}{% if not loop.last%}, {% endif %}{% endfor %}
   {% endif %}
   {%- if resourcePageReferences|length > 0 %}
-  \item \textit{Resource Pages}: {% for reference in resourcePageReferences -%}
+  \item \textit{ {%- trans %}Resource Pages{% endtrans %}}: {% for reference in resourcePageReferences -%}
   {%- if reference.resource_page_uuid and reference.resource_page and reference.resource_page.collection -%}
     {%- set resourcePageLink = dc.config.client_url ~ '/knowledge-models/' ~ dc.pkg.id ~ '/resource-pages/' ~ reference.resource_page.uuid -%}
     \href{{ "{" }}{{ resourcePageLink }}{{ "}" }}{{ "{" }}{{ reference.resource_page.collection.title }} - {{ reference.resource_page.title }}{{ "}" }}
     {%- if not loop.last -%}, {% endif -%}{%- endif -%}{%- endfor -%}
   {%- endif -%}
   {%- if urlReferences|length > 0 %}
-  \item \textit{External Links}: {% for reference in urlReferences -%}
+  \item \textit{ {%- trans %}External Links{% endtrans %}}: {% for reference in urlReferences -%}
     \href{{ "{" }}{{ reference.url }}{{ "}" }}{{ "{" }}{{ reference.label }}{{ "}" }}
     {%- if not loop.last -%}, {% endif -%}{%- endfor -%}
   {%- endif -%}
   {% if experts|length > 0 %}
-  \item \textit{Experts}: {% for expert in experts -%}
+  \item \textit{ {%- trans %}Experts{% endtrans %}}: {% for expert in experts -%}
     {{expert.name}} $\langle$\href{{ "{" }}mailto:{{ expert.email }}{{ "}" }}{{ "{" }}{{ expert.email }}{{ "}" }}$\rangle$
     {%- if not loop.last -%}, {% endif -%}{%- endfor -%}
   {%- endif -%}
@@ -209,7 +210,7 @@
   \centering
   \begin{tabular}{ l c r }
 {%- for item in report.indications %}
-    Answered {% if item.is_for_phase %}(current phase){% endif %} & {{item.answered}} / {{item.total}} & {{ progressBar(item.percentage) }} \\
+    {% if item.is_for_phase %}{% trans %}Answered (current phase){% endtrans %}{% else %}{% trans %}Answered{% endtrans %} {% endif %} & {{item.answered}} / {{item.total}} & {{ progressBar(item.percentage) }} \\
 {%- endfor %}
     & & \\ \hline
     & & \\
@@ -223,14 +224,14 @@
 {%- endmacro -%}
 {%- macro renderVersions() -%}
 {% if dc.project.versions|length > 0 %}
-\section*{History of Versions}
+\section*{ {%- trans %}History of Versions{% endtrans %}}
 
 \begin{table}[h]
 	\centering
 	\begin{tabular}{ c c p{0.6\linewidth} }
-		Version & Date & Description \\ \hline\hline\Tstrut
+		{% trans %}Version{% endtrans %} & {% trans %}Date{% endtrans %} & {% trans %}Description{% endtrans %} \\ \hline\hline\Tstrut
 {%- for version in dc.project.versions|reverse %}
-		{{ version.name }}  & {{ version.created_at|datetime_format("%d %b %Y") }} & {{ version.description }} \\ \hline\Tstrut
+		{{ version.name }}  & {{ formatDate(version.created_at) }} & {{ version.description }} \\ \hline\Tstrut
 {%- endfor %}
   \end{tabular}
 \end{table}
@@ -241,7 +242,8 @@
 {#- ------------------------------------------------------------------------------------ -#}
 \documentclass[a4paper,12pt]{report}
 \usepackage[utf8]{inputenc}
-\usepackage[english]{babel}
+{#- TRANSLATORS: language option of the LaTeX babel package for this translation, e.g. czech, german, dutch #}
+\usepackage[{{ pgettext('LaTeX babel language', 'english') }}]{babel}
 
 \usepackage{geometry}
 \geometry{
@@ -295,7 +297,7 @@
 
         \vspace{0.5cm}
         \LARGE
-        Questionnaire Report
+        {% trans %}Questionnaire Report{% endtrans %}
 
         \vspace{1.5cm}
 
@@ -307,39 +309,40 @@
         \vspace{1.5cm}
 
         \normalsize
-        Based on\\
+        {% trans %}Based on{% endtrans %}\\
         {{dc.pkg.name}}, {{dc.pkg.version}}\\
         \texttt{{"{"}}{{dc.pkg.org_id}}:{{dc.pkg.km_id}}:{{dc.pkg.version}}{{"}"}}\\
         {%- for version in dc.project.versions if version.uuid == dc.project.version %}
         \vspace{0.5cm}
-        Version: {{ version.name }} ({{ version.created_at|datetime_format("%d %b %Y %H:%M:%S") }} UTC)\\
+        {% trans name=version.name, date=formatDateTime(version.created_at) %}Version: {{ name }} ({{ date }} UTC){% endtrans %}\\
         {%- endfor %}
         {%- if dc.current_phase %}
         \vspace{0.5cm}
-        Project phase: {{dc.current_phase.title}}\\
+        {% trans title=dc.current_phase.title %}Project phase: {{ title }}{% endtrans %}\\
         {%- endif %}
         {%- if dc.project.project_tags|length > 0 %}
         \vspace{0.25cm}
-        Project tags: {% for tag in dc.project.project_tags %}{{ tag }}{% if not loop.last %}, {% endif %}{% endfor %}\\
+        {% trans %}Project tags:{% endtrans %} {% for tag in dc.project.project_tags %}{{ tag }}{% if not loop.last %}, {% endif %}{% endfor %}\\
         {%- endif %}
         {%- if dc.project.description %}
         \vspace{0.25cm}
-        Description: {{ dc.project.description }}\\
+        {% trans description=dc.project.description %}Description: {{ description }}{% endtrans %}\\
         {%- endif %}
 
         \vfill
 
         \Large
-        {{ "{" }}{{ dc.doc.created_at|datetime_format("%d %b %Y") }}{{ "}" }}
+        {{ "{" }}{{ formatDate(dc.doc.created_at) }}{{ "}" }}
 
         \vspace{0.8cm}
 
         \normalsize
-        Document generated by \href{{ "{" }}{{ dc.config.service_url }}{{ "}" }}{{ "{" }}{{ dc.config.service_name }}{{ "}" }}
+        {%- set serviceLink -%}\href{{ "{" }}{{ dc.config.service_url }}{{ "}" }}{{ "{" }}{{ dc.config.service_name }}{{ "}" }}{%- endset %}
+        {% trans service=serviceLink %}Document generated by {{ service }}{% endtrans %}
     \end{center}
 \end{titlepage}
 
-\chapter*{Report Summary}
+\chapter*{ {%- trans %}Report Summary{% endtrans %}}
 
 {{ renderReport(dc.report.total_report) }}
 
@@ -359,7 +362,7 @@
 {%- endif %}
 
 {% for chapterReport in chapter.reports %}
-\section*{Chapter Summary}
+\section*{ {%- trans %}Chapter Summary{% endtrans %}}
 {{ renderReport(chapterReport) }}
 {% endfor %}
 
