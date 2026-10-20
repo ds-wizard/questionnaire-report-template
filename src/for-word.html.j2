@@ -97,9 +97,9 @@
       ✔️ <span>{{ hi|of_alphabet }}. {{answer.label}}</span>
     </p>
     {% if answer.advice %}
-    <p>
+    <div>
       <b>Advice:</b> {{answer.advice|markdown}}
-    </p>
+    </div>
     {% endif %}
     {% if answer.followups|length > 0 %}
       <div>
@@ -221,7 +221,7 @@
         {% for item in report.indications %}
           <tr>
             <td>Answered {% if item.is_for_phase %}(current phase){% endif %}</td>
-              <td>{{item.answered}} / {{item.total}} </td>
+            <td>{{item.answered}} / {{item.total}} </td>
             <td>{{ "%.2f"|format(item.percentage)}} %</td>
           </tr>
         {% endfor %}
@@ -246,7 +246,7 @@
 {%- macro renderChapter(chapter, humanIdentifier) -%}
       <section>
         <h1>{{humanIdentifier|roman}}. {{chapter.title}}</h1>
-        <p>{{chapter.text|markdown}}</p>
+        <div>{{chapter.text|markdown}}</div>
 
         {% for chapterReport in chapter.reports %}
           {{ renderReport(chapterReport) }}
