@@ -1,3 +1,4 @@
+{%- autoescape false -%}
 {#- ------------------------------------------------------------------------------------ -#}
 {#-  VARIABLES                                                                           -#}
 {#- ------------------------------------------------------------------------------------ -#}
@@ -112,7 +113,7 @@
 {%- endmacro -%}
 {%- macro renderAnswerFile(question, reply, path, humanIdentifier) -%}
 {% if reply.file %}
-✔️ [{{ reply.file.name }}]({{ reply.file.download_url }}) ({{ reply.file.size|bytesize_format }})</p>
+✔️ [{{ reply.file.name }}]({{ reply.file.download_url }}) ({{ reply.file.size|bytesize_format }})
 {% else %}
 ❌ The file has been deleted
 {% endif %}
@@ -240,4 +241,4 @@ The named versions of this document:
 {% else %}
 *No chapters*
 {% endfor %}
-
+{% endautoescape %}
