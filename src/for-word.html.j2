@@ -9,8 +9,8 @@
 {# ------------------------------------------------------------------------------------ #}
 {%- macro renderTags(question) -%}
   {% if question.tags|length > 0 %}
-    <div>
-      🏷️ <b>{% trans %}Tags:{% endtrans %}</b> {% for tag in question.tags %}<i>{{tag.name}}</i>{% if not loop.last %}, {% endif %}{% endfor %}
+    <div data-custom-style="Question Meta">
+      <b>{% trans %}Tags:{% endtrans %}</b> {% for tag in question.tags %}<i>{{tag.name}}</i>{% if not loop.last %}, {% endif %}{% endfor %}
     </div>
   {% endif %}
 {%- endmacro -%}
@@ -27,8 +27,8 @@
     {% endif %}
   {% endfor %}
   {% if refs|length > 0 %}
-    <div>
-      📖 <b>{% trans %}Resource Pages:{% endtrans %}</b> {% for ref in refs %}{%- set resourcePageLink = dc.config.client_url ~ '/knowledge-models/' ~ dc.pkg.id ~ '/resource-pages/' ~ ref.uuid -%}<a id="{{ref.ref_uuid}}" class="reference resourcepage-link" href="{{ resourcePageLink }}"><i>{{ ref.collection_title }} - {{ ref.title }}</i></a>{% if not loop.last %}, {% endif %}{% endfor %}
+    <div data-custom-style="Question Meta">
+      <b>{% trans %}Resource Pages:{% endtrans %}</b> {% for ref in refs %}{%- set resourcePageLink = dc.config.client_url ~ '/knowledge-models/' ~ dc.pkg.id ~ '/resource-pages/' ~ ref.uuid -%}<a id="{{ref.ref_uuid}}" class="reference resourcepage-link" href="{{ resourcePageLink }}"><i>{{ ref.collection_title }} - {{ ref.title }}</i></a>{% if not loop.last %}, {% endif %}{% endfor %}
     </div>
   {% endif %}
 {%- endmacro -%}
@@ -44,8 +44,8 @@
     {% endif %}
   {% endfor %}
   {% if refs|length > 0 %}
-    <div>
-      🔗 <b>{% trans %}External Links:{% endtrans %}</b> {% for ref in refs %}<a href="{{ref.url}}" target="_blank"><i>{{ref.label}}</i></a>{% if not loop.last %}, {% endif %}{% endfor %}
+    <div data-custom-style="Question Meta">
+      <b>{% trans %}External Links:{% endtrans %}</b> {% for ref in refs %}<a href="{{ref.url}}" target="_blank"><i>{{ref.label}}</i></a>{% if not loop.last %}, {% endif %}{% endfor %}
     </div>
   {% endif %}
 {%- endmacro -%}
@@ -61,8 +61,8 @@
     {% endif %}
   {% endfor %}
   {% if experts|length > 0 %}
-    <div>
-      🙋 <b>{% trans %}Experts:{% endtrans %}</b> {% for expert in experts %}<i>{{expert.name}} (<a href="mailto:{{expert.email}}">{{expert.email}}</a>){% if not loop.last %}, {% endif %}</i>{% endfor %}
+    <div data-custom-style="Question Meta">
+      <b>{% trans %}Experts:{% endtrans %}</b> {% for expert in experts %}<i>{{expert.name}} (<a href="mailto:{{expert.email}}">{{expert.email}}</a>){% if not loop.last %}, {% endif %}</i>{% endfor %}
     </div>
   {% endif %}
 {%- endmacro -%}
@@ -70,22 +70,19 @@
 {#  ANSWERS MACROS                                                                      #}
 {# ------------------------------------------------------------------------------------ #}
 {%- macro renderAnswerValue(question, reply, path, humanIdentifier) -%}
-  <div>
-    <p>
-      ✔️
-      {% if reply is of_type("StringReply") %}
-        <span>{{reply.markdown_plain}}</span>
-      {% else %}
-        <span>{{reply.value.rsplit(" ![]")[0]|markdown}}</span>
-        {% if reply.is_legacy_integration %}
-          {# Integration #}
-          {% set integration = question.integration %}
-          <span>
-            ({{ integration.name }}: <a href="{{ integration.item(reply.item_id) }}">{{ reply.item_id }}</a>)
-          </span>
-        {% endif %}
+  <div data-custom-style="Answer">
+    {% if reply is of_type("StringReply") %}
+      <p>{{reply.markdown_plain}}</p>
+    {% else %}
+      {{reply.value.rsplit(" ![]")[0]|markdown}}
+      {% if reply.is_legacy_integration %}
+        {# Integration #}
+        {% set integration = question.integration %}
+        <p>
+          ({{ integration.name }}: <a href="{{ integration.item(reply.item_id) }}">{{ reply.item_id }}</a>)
+        </p>
       {% endif %}
-    </p>
+    {% endif %}
   </div>
 {%- endmacro -%}
 {%- macro renderAnswerOption(question, reply, path, humanIdentifier) -%}
@@ -94,11 +91,11 @@
   {% set path = path ~ "." ~ answer.uuid %}
   {% set humanIdentifier = humanIdentifier ~ "." ~ hi|of_alphabet %}
   <div>
-    <p>
-      ✔️ <span>{{ hi|of_alphabet }}. {{answer.label}}</span>
-    </p>
+    <div data-custom-style="Answer">
+      <p>{{ hi|of_alphabet }}. {{answer.label}}</p>
+    </div>
     {% if answer.advice %}
-    <div>
+    <div data-custom-style="Advice">
       <b>{% trans %}Advice:{% endtrans %}</b> {{answer.advice|markdown}}
     </div>
     {% endif %}
@@ -115,53 +112,54 @@
 {%- endmacro -%}
 {%- macro renderAnswerList(question, reply, path, humanIdentifier) -%}
   <div>
-    <h4>{% trans count=reply.items|length %}Answers ({{ count }} item){% pluralize %}Answers ({{ count }} items){% endtrans %}</h4>
+    <div data-custom-style="Section Label"><p>{% trans count=reply.items|length %}Answers ({{ count }} item){% pluralize %}Answers ({{ count }} items){% endtrans %}</p></div>
     {% set itemPathPrefix = path ~ "." %}
     {% set hiPrefix = humanIdentifier ~ "." %}
     {% for i in reply.items %}
       {% set itemPath = itemPathPrefix ~ i %}
       {% set itemHumanIdentifier = hiPrefix ~ (loop.index - 1)|of_alphabet %}
       <div class="answer-item" id="{{itemPath}}">
+        <div data-custom-style="Item Heading"><p>{{ itemHumanIdentifier }}</p></div>
         <div class="followups">
           {% for question in question.followups %}
             {% set x = loop.index %}
             {{ renderQuestion(question, itemPath, itemHumanIdentifier ~ "." ~ x) }}
           {% else %}
-            <i>{% trans %}No follow up questions{% endtrans %}</i>
+            <div data-custom-style="Not Answered"><p>{% trans %}No follow up questions{% endtrans %}</p></div>
           {% endfor %}
         </div>
       </div>
     {% else %}
-      <i>{% trans %}No answer items{% endtrans %}</i>
+      <div data-custom-style="Not Answered"><p>{% trans %}No answer items{% endtrans %}</p></div>
     {% endfor %}
   </div>
 {%- endmacro -%}
 {%- macro renderAnswerChoiceList(question, reply, path, humanIdentifier) -%}
   <div>
-    <ul>
     {% for choice in question.choices %}
       {%- if choice in reply.choices %}
-        <li>✔️ {{ choice.label }}</li>
+        <div data-custom-style="Choice Selected"><p>■ {{ choice.label }}</p></div>
       {%- else %}
-        <li>❌ {{ choice.label }}</li>
+        <div data-custom-style="Choice Unselected"><p>□ {{ choice.label }}</p></div>
       {%- endif %}
     {% endfor %}
-    </ul>
   </div>
 {%- endmacro -%}
 {%- macro renderAnswerItemSelect(question, reply, path, humanIdentifier) -%}
-  <div>
-    <p>✔️ {{ reply.item_title }}</p>
+  <div data-custom-style="Answer">
+    <p>{{ reply.item_title }}</p>
   </div>
 {%- endmacro -%}
 {%- macro renderAnswerFile(question, reply, path, humanIdentifier) -%}
-  <div>
   {% if reply.file %}
-    <p>✔️ <a href="{{ reply.file.download_url }}" target="_blank">{{ reply.file.name }}</a> ({{ reply.file.size|bytesize_format }})</p>
-  {% else %}
-    <p>❌ {% trans %}The file has been deleted{% endtrans %}</p>
-  {% endif %}
+  <div data-custom-style="Answer">
+    <p><a href="{{ reply.file.download_url }}" target="_blank">{{ reply.file.name }}</a> ({{ reply.file.size|bytesize_format }})</p>
   </div>
+  {% else %}
+  <div data-custom-style="Not Answered">
+    <p>{% trans %}The file has been deleted{% endtrans %}</p>
+  </div>
+  {% endif %}
 {%- endmacro -%}
 {# ------------------------------------------------------------------------------------ #}
 {#  QUESTION MACROS                                                                     #}
@@ -193,19 +191,27 @@
       {{ renderAnswerFile(question, reply, path, humanIdentifier) }}
     {% endif %}
   {% else %}
-    <p>❗ <i>{% trans %}This question has not been answered yet!{% endtrans %}</i></p>
+    <div data-custom-style="{{ "Not Answered Required" if question.is_required else "Not Answered" }}">
+      <p>{% trans %}This question has not been answered yet!{% endtrans %}</p>
+    </div>
   {% endif %}
 {%- endmacro -%}
 {%- macro renderQuestion(question, path, humanIdentifier) -%}
   {% set path = path ~ "." ~ question.uuid %}
+  {#- top-level questions are Heading 2, each level of follow-ups one level lower #}
+  {% set level = [2 + (humanIdentifier|string).count(".") // 2, 6]|min %}
   <div>
-    <h2>{{humanIdentifier}}. {{question.title}}</h2>
+    <h{{ level }}><span data-custom-style="Question Number">{{humanIdentifier}}</span> {{question.title}}</h{{ level }}>
 
     {{ renderTags(question) }}
 
-    {{ renderQuestionExtras(question) }}
+    {% if question.text %}
+    <div data-custom-style="Question Text">
+      {{ question.text|markdown }}
+    </div>
+    {% endif %}
 
-    {{ question.text|markdown }}
+    {{ renderQuestionExtras(question) }}
 
     {{ renderQuestionReply(question, path, humanIdentifier) }}
   </div>
@@ -213,23 +219,27 @@
 {# ------------------------------------------------------------------------------------ #}
 {#  CHAPTER MACROS                                                                      #}
 {# ------------------------------------------------------------------------------------ #}
-{%- macro renderReport(report) -%}
+{%- macro renderReport(report, top=false) -%}
   <section>
-    <h2>{% trans %}Summary{% endtrans %}</h2>
-    <h3>{% trans %}Answered indication{% endtrans %}</h3>
+    {% if top %}
+    <h1>{% trans %}Summary{% endtrans %}</h1>
+    {% else %}
+    <div data-custom-style="Section Label"><p>{% trans %}Summary{% endtrans %}</p></div>
+    {% endif %}
+    <div data-custom-style="Section Label"><p>{% trans %}Answered indication{% endtrans %}</p></div>
     <table>
       <tbody>
         {% for item in report.indications %}
           <tr>
             <td>{% if item.is_for_phase %}{% trans %}Answered (current phase){% endtrans %}{% else %}{% trans %}Answered{% endtrans %} {% endif %}</td>
             <td>{{item.answered}} / {{item.total}} </td>
-            <td>{{ "%.2f"|format(item.percentage)}} %</td>
+            <td>{{ "%.0f"|format(100 * item.percentage) }} %</td>
           </tr>
         {% endfor %}
       </tbody>
     </table>
     {% if report.metrics|length > 0 %}
-    <h3>{% trans %}Metrics{% endtrans %}</h3>
+    <div data-custom-style="Section Label"><p>{% trans %}Metrics{% endtrans %}</p></div>
     <table>
       <thead><tr><th>{% trans %}Metric{% endtrans %}</th><th>{% trans %}Score{% endtrans %}</th></tr></thead>
       <tbody>
@@ -247,7 +257,9 @@
 {%- macro renderChapter(chapter, humanIdentifier) -%}
       <section>
         <h1>{{humanIdentifier|roman}}. {{chapter.title}}</h1>
-        <div>{{chapter.text|markdown}}</div>
+        {% if chapter.text %}
+        <div data-custom-style="Question Text">{{chapter.text|markdown}}</div>
+        {% endif %}
 
         {% for chapterReport in chapter.reports %}
           {{ renderReport(chapterReport) }}
@@ -257,7 +269,7 @@
           {% for question in chapter.questions %}
             {{ renderQuestion(question, chapter.uuid, loop.index) }}
           {% else %}
-            <p><i>{% trans %}No questions{% endtrans %}</i></p>
+            <div data-custom-style="Not Answered"><p>{% trans %}No questions{% endtrans %}</p></div>
           {% endfor %}
         </section>
       </section>
@@ -311,26 +323,40 @@
     </tr>
   </table>
 
+  <div data-custom-style="Tool Info">
+    <p>{% trans service_name=dc.config.service_name %}Report generated by {{ service_name }}{% endtrans %} &lt;<a href="{{ dc.config.service_url }}">{{ dc.config.service_domain_name }}</a>&gt;</p>
+  </div>
+
   \newpage
 {%- endmacro -%}
 {%- macro renderVersionsOverview() -%}
   <div>
-    <h2>{% trans %}History of Versions{% endtrans %}</h2>
+    <h1>{% trans %}History of Versions{% endtrans %}</h1>
     <p>{% trans %}The named versions of this document:{% endtrans %}</p>
-    <ul>
-      {% for version in dc.project.versions|reverse %}
-        <li>
-          <strong>{{ version.name }}</strong> ({{ formatDate(version.created_at) }})
-          <p>{{ version.description }}</p>
-        </li>
-      {% endfor %}
-    </ul>
+    <table>
+      <thead>
+        <tr>
+          <th>{% trans %}Version{% endtrans %}</th>
+          <th>{% trans %}Date{% endtrans %}</th>
+          <th>{% trans %}Changes{% endtrans %}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for version in dc.project.versions|reverse %}
+          <tr>
+            <td><strong>{{ version.name }}</strong></td>
+            <td>{{ formatDate(version.created_at) }}</td>
+            <td>{{ version.description }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
   </div>
 {%- endmacro -%}
 {%- macro renderContent() -%}
   <div>
     <div>
-      {{ renderReport(dc.report.total_report) }}
+      {{ renderReport(dc.report.total_report, top=true) }}
     </div>
     {% if dc.project.versions|length > 0 %}
       {{ renderVersionsOverview() }}
@@ -339,7 +365,7 @@
       \newpage
       {{ renderChapter(chapter, loop.index) }}
     {% else %}
-      <p><i>{% trans %}No chapters{% endtrans %}</i></p>
+      <div data-custom-style="Not Answered"><p>{% trans %}No chapters{% endtrans %}</p></div>
     {% endfor %}
 
   </div>

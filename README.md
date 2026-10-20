@@ -37,6 +37,16 @@ This document template for DSW is available as open-source via GitHub Repository
 
 ## Changelog
 
+### 2.19.0
+
+- Redesigned HTML/PDF document: cover page, running headers, compact questions, highlighted answers
+- Redesigned MS Word document: restyled reference document (A4), styles for answers, help texts,
+  advice and unanswered questions, heading levels by follow-up depth, versions as a table
+- Redesigned LaTeX document: cover page, table of contents, running headers, answer boxes
+- Fixed LaTeX output that did not compile with special characters (`&`, `#`, `%`, `_` ...) and
+  quotes in texts and answers
+- Fixed percentages in the summary of the MS Word document
+
 ### 2.18.0
 
 - Adjusted to template metamodel version 18.3 (released in DSW 4.35.0)
